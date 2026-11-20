@@ -113,44 +113,72 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
 <div class="wrap">
   <header>
     <h1>🐾 寵物配對：養之前，先確認你適不適合</h1>
-    <p>用一句話描述你的生活條件，逐步追加條件，找出適合的狗或貓，並比較購買與領養。</p>
+    <p>用一句話說出你的狀況、住的地方或疑問，寵物配對 AI 會推薦適合的狗或貓、說明原因、補問缺少的資訊並回答問題。</p>
     <p class="small">核心問題：<b>「我適不適合養這隻寵物？」</b>——每個功能都回答這一題。</p>
   </header>
 
   <nav id="nav">
-    <button data-tab="search" class="on">① 搜尋配對</button>
+    <button data-tab="search" class="on">① 寵物配對 AI</button>
     <button data-tab="breed">② 品種詳細頁</button>
-    <button data-tab="env">③ 環境評估</button>
-    <button data-tab="advisor">④ AI 顧問</button>
-    <button data-tab="eval">⑤ 品質評估</button>
+    <button data-tab="eval">③ AI 品質評估</button>
     <button data-tab="todo">📋 待決事項</button>
     <button data-tab="about">ℹ️ 專案說明</button>
   </nav>
 
-  <!-- ① 搜尋 -->
+  <!-- ① 寵物配對 AI -->
   <section class="tab on" id="tab-search">
     <div class="card">
-      <h2>說說你的情況</h2>
+      <h2>寵物配對 AI</h2>
+      <p class="small muted" style="margin-top:-4px">一個輸入框：描述需求、提到住的地方，或直接提問都可以。只依本站的台灣在地資料回答並附來源。</p>
       <div class="row">
-        <input type="text" id="q" placeholder="例如：我是新手，住小套房">
-        <button class="btn" id="qbtn">加入條件</button>
+        <input type="text" id="q" placeholder="例如：我是新手，住大安區的公寓，柯基可以嗎？">
+        <button class="btn" id="qbtn">送出</button>
         <button class="btn ghost" id="clear">清除全部</button>
       </div>
       <div class="chips examples small muted" id="examples">試試看：</div>
+      <div id="parseInfo" class="small" style="margin-top:8px"></div>
       <div class="chips" id="conds"></div>
-      <div id="parseInfo" class="small muted" style="margin-top:6px"></div>
       <div id="legal"></div>
-      <div id="envApplied"></div>
     </div>
+
+    <div class="card" id="answerCard" style="display:none"></div>
+
+    <div class="card" id="mapCard" style="display:none">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">📍 周邊環境（台北市）</h2><button class="btn ghost sm" id="mapClose">移除地點</button></div>
+      <p class="small muted" style="margin:4px 0 0">AI 依你提到的地點計算周邊設施，並調整推薦。可直接點地圖修正位置。地址只用來計算、不儲存。</p>
+      <div id="map"></div>
+      <div class="legend">
+        <span><i style="background:#2f8a5b"></i>公園／狗運動公園</span>
+        <span><i style="background:#b7791f"></i>國小／幼兒園</span>
+        <span><i style="background:#3b6fd9"></i>動物醫院</span>
+        <span><i style="background:#c0392b"></i>24 小時急診</span>
+        <span><i style="background:#d9733b"></i>你的位置（虛線圈：300 m／1 km）</span>
+      </div>
+      <div class="nearby" id="nearby"></div>
+      <div id="envFired" class="small"></div>
+      <details class="small" style="margin-top:6px"><summary class="muted">手動調整周邊條件</summary><div class="envgrid" id="envChecks"></div></details>
+      <p class="small muted" style="margin:6px 0 0">⚠ 示意地圖（虛構街區）：測試版將地名對應到示意位置；正式版改用 Google Geocoding＋OpenStreetMap＋臺北市開放資料。</p>
+    </div>
+
+    <div class="card" id="followCard" style="display:none"></div>
+
     <div class="seg" id="speciesTabs"></div>
     <div id="resultHead" class="row" style="margin-bottom:8px"></div>
     <div class="grid" id="results"></div>
-    <div class="discuss" style="margin-top:16px">
-      <b>🗣 討論點（搜尋）</b>
+
+    <div class="card" style="margin-top:16px">
+      <h2>環境規則表（設定檔，非寫死在程式中）</h2>
+      <p class="small muted">只加減分與提醒，不直接排除（唯一例外：法規禁養）；每條規則對應一題品質評估測試。數字為建議值，待組內討論與專家審核。</p>
+      <div class="tablewrap"><table id="ruleTable"></table></div>
+    </div>
+    <div class="discuss">
+      <b>🗣 討論點（寵物配對 AI）</b>
       <ul>
-        <li>目前是「關鍵字比對」版本（AI 失靈時的備案）。正式版由 AI 把句子轉成標籤，要用哪個模型、預算多少？</li>
+        <li>測試版以關鍵字比對模擬 AI（也是 AI 失靈時的備案）。正式版要用哪個模型、預算多少？</li>
         <li>各標籤的判斷標準：例如「新手友善」要幾分以上？「適合公寓」的依據來源？</li>
-        <li>沒有完全符合時，「最接近的結果」要顯示幾筆？是否要說明差在哪個條件（目前有）？</li>
+        <li>追問最多問幾題？剩幾個品種時停止？</li>
+        <li>環境規則距離（300 m／1 km／5 km）與「大型公園」門檻，需請獸醫或老師審核。</li>
+        <li>第 5 週若落後：地圖卡片改為只顯示文字的周邊設施清單；「如果……就可以」改為只顯示不符合條件；問答限定熱門品種。</li>
       </ul>
     </div>
   </section>
@@ -161,110 +189,36 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
     <div class="card" id="breedBox"></div>
   </section>
 
-  <!-- ③ 環境 -->
-  <section class="tab" id="tab-env">
-    <div class="card">
-      <h2>地圖環境評估（台北市 MVP）</h2>
-      <p class="small muted">正式版：輸入地址 → Google Geocoding 轉座標 → 查 OSM 公園／學校、臺北市動物醫院開放資料 → 套用規則表。<br>測試版：<b>在地圖上點一下你住的位置</b>，或選擇情境，系統會自動判斷周邊條件（也可手動調整勾選）。住址只取大概位置，不存入資料庫。</p>
-      <div class="row">
-        <input type="text" id="addr" placeholder="地址備註（測試版不會實際查詢，請直接點地圖）">
-        <select id="housing">
-          <option value="apartment">公寓／大樓</option>
-          <option value="house">透天／有院子</option>
-        </select>
-      </div>
-      <div class="chips" id="scenarios"></div>
-      <div id="map"></div>
-      <div class="legend">
-        <span><i style="background:#2f8a5b"></i>公園／狗運動公園</span>
-        <span><i style="background:#b7791f"></i>國小／幼兒園</span>
-        <span><i style="background:#3b6fd9"></i>動物醫院</span>
-        <span><i style="background:#c0392b"></i>24 小時急診動物醫院</span>
-        <span><i style="background:#d9733b"></i>你的位置（虛線圈：300 m／1 km）</span>
-      </div>
-      <p class="small muted" style="margin:2px 0">⚠ 這是<b>示意地圖</b>（虛構街區，不是真實地理位置），用來展示流程。正式版改用 Leaflet＋OpenStreetMap 真實地圖與臺北市開放資料。</p>
-      <div class="nearby" id="nearby"></div>
-      <div class="envgrid" id="envChecks"></div>
-      <div class="row">
-        <button class="btn" id="envRun">評估並套用到搜尋結果</button>
-        <button class="btn ghost" id="envReset">取消套用</button>
-      </div>
-    </div>
-    <div class="card" id="envResult" style="display:none"></div>
-    <div class="card">
-      <h2>規則表（設定檔，非寫死在程式中）</h2>
-      <p class="small muted">原則：只加減分與提醒，不直接排除（唯一例外：法規禁養）；每條規則附說明；每條規則都對應一題品質評估測試。數字為建議值，待審核。</p>
-      <div class="tablewrap"><table id="ruleTable"></table></div>
-    </div>
-    <div class="card">
-      <h2>資料來源（混合方案，台北市）</h2>
-      <div class="tablewrap"><table>
-        <tr><th>資料</th><th>來源</th><th>說明</th></tr>
-        <tr><td>地址轉座標</td><td>Google Geocoding API</td><td>每月 10,000 次免費；需綁卡，須設用量上限與預算警示；結果快取</td></tr>
-        <tr><td>公園、學校</td><td>OpenStreetMap（Overpass API）</td><td>免費，須標示 OSM 資料來源；完整度需實測</td></tr>
-        <tr><td>動物醫院</td><td>臺北市動物醫院一覽表、夜間急診／24 小時動物醫院一覽表</td><td>政府開放資料；只有地址，需先轉成座標存起來</td></tr>
-        <tr><td>狗運動公園／狗活動區</td><td>臺北市動保處公告，組員手動整理</td><td>數量少，可手動維護</td></tr>
-        <tr><td>地圖畫面</td><td>Leaflet＋OSM 圖層</td><td>免費</td></tr>
-      </table></div>
-      <p class="small muted">備案：無法綁卡時，地址轉座標改用 OSM 的免費服務（需遵守使用頻率限制）。</p>
-      <h3>規則負責與審核流程</h3>
-      <ol class="small" style="margin:4px 0;padding-left:20px">
-        <li>地圖組員：起草規則表與距離</li>
-        <li>資料組員：對照品種標籤，確認每條規則影響哪些品種</li>
-        <li>有程式背景組員：把規則轉成品質評估測試題</li>
-        <li>獸醫或動物相關科系老師：審核（尤其是攻擊性、醫療相關規則）</li>
-        <li>組內討論定案，之後修改都要更新測試題</li>
-      </ol>
-      <p class="small muted">距離參考步行時間：300 m 約 4 分鐘、1 km 約 12–15 分鐘；台北市動物醫院密度高，故「附近沒有動物醫院」用 1 km。</p>
-    </div>
-    <div class="discuss">
-      <b>🗣 討論點（環境評估）</b>
-      <ul>
-        <li>「大型公園」的面積門檻要訂多少？</li>
-        <li>規則與距離（300 m／1 km／5 km）需請獸醫或動物相關科系老師審核。</li>
-        <li>Google 帳號綁卡人選與用量上限、預算警示設定。</li>
-        <li>第 5 週若落後：拿掉互動地圖，改為只顯示文字結果（地圖下方的「周邊設施」清單即為文字版）。</li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- ④ 顧問 -->
-  <section class="tab" id="tab-advisor">
-    <div class="card">
-      <h2>AI 寵物顧問（RAG 模擬）</h2>
-      <p class="small muted">只根據品種資料庫回答並附來源；不閒聊、不做醫療診斷。測試版以規則模擬，正式版改接 LLM＋檢索。</p>
-      <div class="chat" id="chat"></div>
-      <div class="row" style="margin-top:10px">
-        <input type="text" id="ask" placeholder="例如：柯基適合住公寓嗎？">
-        <button class="btn" id="askBtn">送出</button>
-      </div>
-      <div class="chips examples small muted" id="askExamples">試試看：</div>
-    </div>
-    <div class="discuss">
-      <b>🗣 討論點（AI 顧問）</b>
-      <ul>
-        <li>AI 服務與預算（可詢問學校是否提供帳號或額度）。</li>
-        <li>資料來源要切成多細？（品種資料庫、農業部飼養照護指南）</li>
-        <li>若落後，是否先限定部分品種？</li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- ⑤ 評估 -->
+  <!-- ③ 品質評估 -->
   <section class="tab" id="tab-eval">
     <div class="card">
-      <h2>AI 品質評估（開發做法，使用者看不到）</h2>
-      <p class="small muted">準備測試題與標準答案，用程式自動跑題、計分。每次換模型、改提示詞、新增資料後重跑。以下為測試版的範例題，直接跑在本頁的關鍵字比對與模擬顧問上。</p>
+      <h2>AI 品質評估：自動化測試（開發做法，使用者看不到）</h2>
+      <p class="small muted">準備測試題與標準答案，用程式自動跑題、計分。每次換模型、改提示詞、新增資料後重跑。以下為測試版的範例題，直接跑在本頁的寵物配對 AI（關鍵字比對模擬）上。</p>
       <button class="btn" id="evalRun">執行測試</button>
       <div class="kpis" id="kpis"></div>
       <div class="tablewrap"><table id="evalTable"></table></div>
     </div>
+    <div class="card">
+      <h2>與通用 AI 的對照實驗（規劃中）</h2>
+      <p class="small muted">拿同一份測試題，同時問通用 AI（如 ChatGPT、Claude）與本系統。結果無論優劣都如實呈現。</p>
+      <div class="tablewrap"><table>
+        <tr><th>比較項目</th><th>說明</th><th>通用 AI</th><th>本系統</th></tr>
+        <tr><td>台灣在地資訊正確率</td><td>價格、登記費、禁養法規、收容所現況</td><td>待實驗</td><td>待實驗</td></tr>
+        <tr><td>一般品種知識正確率</td><td>品種特徵、照顧方式</td><td>待實驗</td><td>待實驗</td></tr>
+        <tr><td>附來源比例</td><td>回答有標示來源的比例</td><td>待實驗</td><td>待實驗</td></tr>
+        <tr><td>拒答正確率</td><td>診斷、無資料等不該回答的問題</td><td>待實驗</td><td>待實驗</td></tr>
+        <tr><td>可行動資訊</td><td>能否提供收容所動物、合法業者名冊等連結</td><td>待實驗</td><td>待實驗</td></tr>
+      </table></div>
+      <div class="notice info small"><b>研究依據</b>：史丹佛大學研究指出，通用聊天機器人回答法律問題有 58%–82% 出現幻覺；採 RAG 的專門法律 AI 錯誤較少，但仍有 17%–33% 出現幻覺。因此本專案主張「專門 AI 能<b>減少</b>錯誤」，以實驗驗證在寵物決策領域是否成立，不宣稱零錯誤。</div>
+      <p class="small muted">預期：一般品種知識兩者差距可能不大；台灣在地與即時資訊、附來源、拒答方面，本系統應較有優勢。</p>
+    </div>
     <div class="discuss">
       <b>🗣 討論點（品質評估）</b>
       <ul>
-        <li>目標約 50 題：句子轉標籤、顧問回答、法規題的比例怎麼分？誰負責出題？</li>
-        <li>及格門檻？（例如標籤正確率 ≥ 85%、法規題 100%）</li>
-        <li>報告中可比較「關鍵字比對 vs. AI」的正確率。</li>
+        <li>目標約 50 題：輸入理解、句子轉標籤、追問、問答、法規題、環境規則的比例怎麼分？誰負責出題？</li>
+        <li>及格門檻？（例如標籤正確率 ≥ 85%、附來源 100%、法規題 100%）</li>
+        <li>對照實驗要比較哪幾個通用 AI 與版本？開放式回答由誰人工評分？</li>
+        <li>易用性：找 5–8 人做使用者測試＋SUS 問卷。</li>
       </ul>
     </div>
   </section>
@@ -278,13 +232,13 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
     <div class="card">
       <h2>分工建議（6 人／8 週：2026/11/27 – 2027/1/21）</h2>
       <div class="tablewrap"><table>
-        <tr><th>成員</th><th>負責</th><th>對應測試版頁面</th></tr>
-        <tr><td>有程式背景 1–2 人</td><td>AI 寵物顧問、AI 品質評估、後端（品種資料庫、收容所 API）</td><td>④ ⑤</td></tr>
-        <tr><td>新手 2 人</td><td>前端頁面（搜尋、品種頁、比較頁）</td><td>① ② 品種詳細頁</td></tr>
-        <tr><td>新手 1 人</td><td>地圖與環境評估規則</td><td>③</td></tr>
-        <tr><td>新手 1 人</td><td>品種資料、標籤、價格、照顧內容、測試題目</td><td>資料、⑤ 題目</td></tr>
+        <tr><th>角色</th><th>人數</th><th>負責內容</th><th>對應測試版頁面</th></tr>
+        <tr><td>AI／後端</td><td>1–2（有程式背景）</td><td>寵物配對 AI（輸入判斷、追問、RAG）、AI 品質評估與對照實驗、後端架構（品種資料庫、收容所 API）</td><td>① ③</td></tr>
+        <tr><td>前端</td><td>2</td><td>輸入框與結果頁（品種卡片、條件標籤、追問、回答、地圖卡片）、品種詳細頁</td><td>① ②</td></tr>
+        <tr><td>環境評估</td><td>1</td><td>地圖與周邊設施資料、環境規則表、合法業者名冊整理</td><td>① 地圖卡片</td></tr>
+        <tr><td>資料</td><td>1</td><td>品種資料、標籤、價格、照顧內容、測試題目</td><td>資料、③ 題目</td></tr>
       </table></div>
-      <p class="small muted">第 5 週檢查進度，落後時依序縮減：(1) 地圖改只顯示文字 (2) AI 顧問限定部分品種。核心功能（搜尋、品種詳細頁、購買領養比較）與品質評估不縮減。</p>
+      <p class="small muted">第 5 週檢查進度，落後時依序縮減：(1) 地圖卡片改為文字清單 (2)「如果……就可以」改為只顯示不符合條件 (3) 問答限定熱門品種。推薦與追加條件、品種詳細頁、品質評估（含對照實驗）、問答的護欄與附來源不縮減。</p>
     </div>
   </section>
 
@@ -341,24 +295,22 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
       </table></div>
       <h3>本專案的差異化</h3>
       <ol class="small" style="margin:4px 0;padding-left:20px">
-        <li>自然語言搜尋，可逐步追加條件，不是固定問卷</li>
+        <li>自然語言搜尋，AI 會追問、可逐步追加條件，不是固定問卷</li>
         <li>台灣在地化：新台幣價格、台灣法規、台灣收容所資料</li>
         <li>購買與領養在同一頁比較，不偏向任何一邊</li>
+        <li>與通用 AI（如 ChatGPT、Claude）不同：只依台灣在地資料並附來源，能直接連到可行動的資訊（收容所動物、合法業者名冊），並以實驗量化可靠度</li>
       </ol>
     </div>
 
     <div class="card">
       <h2>功能總覽</h2>
       <div class="tablewrap"><table>
-        <tr><th>功能</th><th>類型</th><th>回答的問題</th><th>測試版位置</th></tr>
-        <tr><td>搜尋＋追加條件</td><td>核心</td><td>依我的生活條件，適合哪些品種？</td><td>① 搜尋配對</td></tr>
-        <tr><td>品種詳細頁</td><td>核心</td><td>這個品種的特徵、照顧與費用？</td><td>② 品種詳細頁</td></tr>
-        <tr><td>購買與領養比較</td><td>核心</td><td>該買還是領養？</td><td>② 品種詳細頁下方</td></tr>
-        <tr><td>地圖環境評估</td><td>亮點</td><td>依我住的地方（台北市），適合哪些品種？</td><td>③ 環境評估</td></tr>
-        <tr><td>AI 寵物顧問（RAG）</td><td>亮點</td><td>關於這個品種，我還想問……</td><td>④ AI 顧問</td></tr>
-        <tr><td>AI 品質評估</td><td>開發做法</td><td>證明上面的 AI 是可靠的</td><td>⑤ 品質評估</td></tr>
+        <tr><th>功能</th><th>負責</th><th>內容</th><th>測試版位置</th></tr>
+        <tr><td>寵物配對 AI</td><td>找出適合的</td><td>單一輸入框：推薦與追加條件、AI 建議追問、「如果……就可以」、問答（RAG）、環境評估地圖卡片</td><td>① 寵物配對 AI</td></tr>
+        <tr><td>品種詳細頁</td><td>深入了解</td><td>品種介紹、特徵評分、照顧指南、費用、購買與領養比較</td><td>② 品種詳細頁</td></tr>
+        <tr><td>AI 品質評估</td><td>證明可靠</td><td>自動化測試、與通用 AI 的對照實驗</td><td>③ AI 品質評估</td></tr>
       </table></div>
-      <p class="small muted">AI 負責：句子轉標籤、把結果寫成好讀的說明、依資料庫回答問題（RAG）。AI 不負責產生品種資料，資料一律來自自建資料庫；AI 失靈時以關鍵字比對備案。</p>
+      <p class="small muted">AI 負責：判斷輸入類型、句子轉標籤、挑選追問、產生「如果……就可以」說明、依資料庫回答問題（RAG）、辨識地點。AI 不負責產生品種資料，資料一律來自自建資料庫；AI 失靈時以關鍵字比對與範本回答備案。</p>
     </div>
 
     <div class="card">
@@ -372,7 +324,8 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
         <tr><td>購買價格</td><td>台灣動物社會研究會一覽表＋向合法業者查價</td><td>年份不明，需更新並標示查價日期</td></tr>
         <tr><td>每年開銷</td><td>農業部飼主支出統計</td><td>犬約 14,144 元／年、貓約 13,026 元／年</td></tr>
         <tr><td>登記費用</td><td>農業部</td><td>犬、貓均須登記；晶片 300 元；登記費已絕育 500、未絕育 1,000 元</td></tr>
-        <tr><td>地圖與周邊設施</td><td>Google Geocoding、OpenStreetMap、臺北市動物醫院開放資料、臺北市狗運動公園</td><td>詳見 ③ 環境評估</td></tr>
+        <tr><td>合法業者名冊</td><td>臺北市特定寵物業分區名冊（政府開放資料）</td><td>購買管道連結</td></tr>
+        <tr><td>地圖與周邊設施</td><td>Google Geocoding、OpenStreetMap、臺北市動物醫院開放資料、臺北市狗運動公園</td><td>詳見 ① 地圖卡片與規則表</td></tr>
       </table></div>
     </div>
 
@@ -381,7 +334,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
       <ul class="pc small">
         <li><b>禁養犬種</b>：比特犬全面禁養，不收錄</li>
         <li><b>危險犬種</b>：日本土佐犬、紐波利頓犬、阿根廷杜告犬、巴西菲勒犬、獒犬，若收錄須標示「有法規限制、不適合新手」</li>
-        <li><b>購買連結</b>：犬隻買賣須有特定寵物業許可證，只連結有許可證的業者並顯示字號；貓的規定待向動保處確認</li>
+        <li><b>購買管道</b>：犬隻買賣須有特定寵物業許可證（無照經營可處 10 萬至 300 萬元罰鍰）；不自行推薦業者，改提供辨識提醒並連到政府合法業者名冊；貓的規定待向動保處確認</li>
         <li><b>免責聲明</b>：本站不參與交易；內容僅供參考，不取代獸醫或收容所評估</li>
         <li><b>內容正確性</b>：建議請獸醫或動物相關科系老師審核</li>
       </ul>
@@ -393,7 +346,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
         <div><h3>第一階段（本專題）</h3>
           <ul class="pc small">
             <li>狗約 15–20 種、貓約 10 種（台灣常見品種）</li>
-            <li>全部 6 項功能、收容所 API 串接</li>
+            <li>3 項功能（寵物配對 AI、品種詳細頁、AI 品質評估）、收容所 API 串接</li>
             <li>先不做：會員系統、收藏、留言評價</li>
           </ul></div>
         <div><h3>第二階段（屬於「養了之後」）</h3>
@@ -553,7 +506,9 @@ function parse(text){
 /* ===================== 狀態 ===================== */
 let conds=[];        // 目前條件 id
 let banned=false;
-let env=null;        // 套用中的環境評估
+let env=null;        // 由地點自動計算的環境（null＝沒提到地點）
+let asked=new Set(); // 已回答「否」或略過的追問
+let lastAnswer=null; // 最近一次問答
 
 /* ===================== 搜尋 ===================== */
 const $=s=>document.querySelector(s);
@@ -568,13 +523,43 @@ function addConds(ids){
     if(!conds.includes(id)) conds.push(id);
   }
 }
+/* ---------- 理解輸入：條件／地點／問題 ---------- */
+const LOCS=[
+  {re:/大安|森林公園|復興南路|敦化南路/,pos:[285,365],label:'大安區'},
+  {re:/中正|萬華|西門|台北車站|臺北車站/,pos:[655,435],label:'中正／萬華區'},
+  {re:/北投|士林|陽明山|山邊|山上|天母/,pos:[960,40],label:'北投／士林山邊'},
+  {re:/信義|101|市政府/,pos:[500,330],label:'信義區'},
+  {re:/中山|松山|內湖|南港|文山|大同/,pos:[540,250],label:'台北市其他區'},
+];
+const NON_TPE=/新北|板橋|新店|中和|永和|三重|桃園|新竹|台中|臺中|台南|臺南|高雄|基隆|宜蘭|花蓮|台東|臺東|嘉義|彰化|屏東|苗栗|雲林|南投/;
+function findBreed(t){const id=Object.keys(ALIASES).find(id=>ALIASES[id].some(a=>t.includes(a)));return id?BREEDS.find(b=>b.id===id):null}
+function understand(t){
+  const breed=findBreed(t);
+  const isQ=/[?？]|嗎|可以|適合|多少|怎麼|如何|會不會|是什麼|介紹|好養|難養/.test(t);
+  const self=/我|家裡|家中|想養|想要/.test(t);
+  const loc=LOCS.find(l=>l.re.test(t));
+  const outside=!loc && NON_TPE.test(t);
+  const medical=/症狀|生病|吐|拉肚子|腹瀉|發燒|診斷|吃藥|受傷/.test(t);
+  // 純提問（例如「柯基適合住公寓嗎？」）不把問題中的詞當成自己的條件
+  let ids=(breed&&isQ&&!self)||medical?[]:parse(t);
+  if(/比特/.test(t)&&!ids.includes('__banned')) ids.push('__banned');
+  const question=(isQ&&(breed||medical||/比特/.test(t)))||medical||(isQ&&!ids.length&&!loc&&!outside);
+  return {ids,breed,question,loc,outside};
+}
 function submit(){
   const t=$('#q').value.trim(); if(!t) return;
-  const ids=parse(t);
-  $('#parseInfo').textContent = ids.length
-    ? `「${t}」→ ${ids.map(i=>i==='__banned'?'⚠ 法規禁養':CONDS[i].label).join('、')}`
-    : `「${t}」→ 沒有辨識到條件（測試版為關鍵字比對，正式版改由 AI 解析）`;
-  addConds(ids); $('#q').value=''; render();
+  const u=understand(t), parts=[];
+  if(u.ids.length) parts.push('<b>條件</b> '+u.ids.map(i=>i==='__banned'?'⚠ 法規禁養':CONDS[i].label).join('、'));
+  if(u.loc) parts.push('<b>地點</b> '+u.loc.label);
+  if(u.outside) parts.push('<b>地點</b> 台北市以外');
+  if(u.question) parts.push('<b>問題</b> '+(u.breed?u.breed.name:'一般提問'));
+  $('#parseInfo').innerHTML=`<span class="muted">AI 的理解：「${esc(t)}」→</span> `+(parts.length?parts.join('｜'):'<span class="muted">沒有辨識到條件、地點或問題（測試版為關鍵字比對，正式版改由 AI 理解）</span>');
+  addConds(u.ids);
+  if(u.loc) setHome(u.loc.pos,u.loc.label);
+  lastAnswer=u.question?{q:t,...answer(t),breed:u.breed}:null;
+  $('#outsideNote')&&$('#outsideNote').remove();
+  if(u.outside) $('#parseInfo').insertAdjacentHTML('afterend','<div id="outsideNote" class="notice info small">目前環境評估只支援台北市，推薦照常進行。</div>');
+  $('#q').value=''; render();
 }
 
 function envAdjust(b){
@@ -589,6 +574,7 @@ function envAdjust(b){
 }
 
 function render(){
+  syncEnv();
   // 分類（全部／狗／貓）＝ species 條件
   const sp=conds.find(c=>CONDS[c].group==='species')||'all';
   const cnt={all:BREEDS.length,dog:BREEDS.filter(b=>b.species==='dog').length,cat:BREEDS.filter(b=>b.species==='cat').length};
@@ -598,7 +584,6 @@ function render(){
   $('#conds').innerHTML = conds.map(c=>`<button class="chip" data-rm="${c}">${CONDS[c].label} ✕</button>`).join('');
   $('#legal').innerHTML = banned
     ? `<div class="notice bad">⚠ <b>比特犬在台灣全面禁止飼養</b>，本站不收錄。另有日本土佐犬、紐波利頓犬、阿根廷杜告犬、巴西菲勒犬、獒犬等「危險犬種」有法規限制、不適合新手。<button class="btn sm ghost" id="unban">知道了</button></div>` : '';
-  $('#envApplied').innerHTML = env ? `<div class="notice good">📍 已套用環境評估（${esc(env.label)}），分數已依周邊環境調整。</div>` : '';
 
   // 分類是篩選；其餘條件才計分
   const oc=conds.filter(c=>CONDS[c].group!=='species');
@@ -622,6 +607,9 @@ function render(){
     }
   }
   $('#resultHead').innerHTML=head;
+  renderAnswer(rows);
+  renderFollow(rows.filter(r=>!r.miss.length).map(r=>r.b), sp);
+  renderMapCard();
   $('#results').innerHTML = list.map(({b,hit,miss,adj})=>`
     <div class="breed" data-id="${b.id}">
       <div class="top"><span class="emoji">${b.emoji}</span>
@@ -630,7 +618,7 @@ function render(){
       </div>
       <div class="intro">${esc(b.intro)}</div>
       <div class="tags">${breedTags(b)}</div>
-      ${miss.length?`<div class="miss">不符合：${miss.map(m=>CONDS[m].label).join('、')}</div>`:''}
+      ${miss.length?ifCan(b,miss):''}
       ${adj.notes.length?`<div class="small" style="margin-top:6px">${adj.notes.map(n=>`<div><span class="delta ${n.delta>0?'p':n.delta<0?'m':'z'}">${n.delta>0?'+1':n.delta<0?'−1':'提醒'}</span> ${esc(n.msg)}</div>`).join('')}</div>`:''}
     </div>`).join('') || '<p class="muted">沒有結果，試著移除一些條件。</p>';
 }
@@ -645,6 +633,84 @@ function breedTags(b){
   if(b.brachy) t.push('<span class="tag w">短鼻・怕熱</span>');
   if(b.newbie<=2) t.push('<span class="tag w">不適合新手</span>');
   return t.join('');
+}
+
+/* ---------- 「如果……就可以」 ---------- */
+// 可調整的條件才給建議；過敏、住宅、家庭成員等無法調整
+const ADJUST={
+  lowExercise:b=>`如果你每天能撥出時間散步（${b.care.exercise}），就可以考慮`,
+  budget:b=>`如果預算能提高到約 ${money(b.price?b.price[0]:0)}，就可以考慮（或考慮領養）`,
+  quiet:b=>'如果住處不怕吵，並願意做吠叫訓練，就可以考慮',
+  newbie:b=>'如果先累積照顧經驗或參加訓練課程，再考慮會比較穩',
+  independent:b=>'如果每天能有人在家陪伴較長時間，就可以考慮',
+};
+function ifCan(b,miss){
+  const fixed=miss.filter(m=>!ADJUST[m]), adj=miss.filter(m=>ADJUST[m]);
+  let h=`<div class="miss">不符合：${miss.map(m=>CONDS[m].label).join('、')}</div>`;
+  if(fixed.length) h+=`<div class="small muted" style="margin-top:2px">「${fixed.map(m=>CONDS[m].label).join('、')}」無法調整，不建議</div>`;
+  else h+=adj.map(m=>`<div class="small" style="margin-top:2px;color:var(--good)">👉 ${esc(ADJUST[m](b))}</div>`).join('');
+  return h;
+}
+
+/* ---------- AI 建議追問：挑最能縮小範圍的問題 ---------- */
+const FOLLOW=[
+  {id:'sp',q:'想養狗還是貓？',opts:[['dog','狗'],['cat','貓']]},
+  {id:'lowShed',q:'家裡有人對毛過敏嗎？'},
+  {id:'kids',q:'家裡有小孩嗎？'},
+  {id:'elders',q:'家裡有長輩同住嗎？'},
+  {id:'apartment',q:'住公寓或套房嗎？'},
+  {id:'quiet',q:'怕吵到鄰居、需要安靜的嗎？'},
+  {id:'lowExercise',q:'每天能陪牠運動的時間很少嗎？'},
+  {id:'independent',q:'每天離家時間很長（約 10 小時以上）嗎？'},
+  {id:'newbie',q:'這是你第一次養寵物嗎？'},
+  {id:'budget',q:'取得費用希望控制在 1.5 萬以內嗎？'},
+];
+function renderFollow(cands,sp){
+  const box=$('#followCard');
+  const oc=conds.filter(c=>CONDS[c].group!=='species');
+  if(!conds.length && !env){box.style.display='none';return}
+  if(!cands.length){box.style.display='block';box.innerHTML='<h2>💬 AI 建議追問</h2><p class="small muted" style="margin:0">沒有完全符合的品種：可以移除部分條件，或參考卡片上「如果……就可以」的建議。</p>';return}
+  if(cands.length<=3){box.style.display='block';box.innerHTML=`<h2>💬 AI 建議追問</h2><p class="small muted" style="margin:0">剩下 ${cands.length} 種，範圍已經夠小，不再追問。點品種卡片看詳細資料。</p>`;return}
+  const scored=FOLLOW.filter(f=>!asked.has(f.id)).map(f=>{
+    if(f.id==='sp'){ if(sp!=='all') return null; const d=cands.filter(b=>b.species==='dog').length; return {f,yes:d,score:Math.min(d,cands.length-d)} }
+    if(conds.includes(f.id)) return null;
+    const g=CONDS[f.id].group; if(g&&conds.some(c=>CONDS[c].group===g)) return null;
+    const yes=cands.filter(b=>CONDS[f.id].test(b)).length;
+    return {f,yes,score:Math.min(yes,cands.length-yes)};
+  }).filter(x=>x&&x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
+  if(!scored.length){box.style.display='block';box.innerHTML='<h2>💬 AI 建議追問</h2><p class="small muted" style="margin:0">剩下的品種在其他條件上差異不大，問不出差別，不再追問。</p>';return}
+  box.style.display='block';
+  box.innerHTML=`<h2>💬 AI 建議追問</h2><p class="small muted" style="margin:-4px 0 8px">挑「最能縮小範圍」的問題：能把目前 ${cands.length} 種分得最平均的先問。也可以忽略，自己再輸入。</p>`+
+    scored.map(({f,yes})=>`<div class="row" style="margin:6px 0"><span>${f.q}</span>
+      ${f.opts?f.opts.map(([v,l])=>`<button class="chip plain" data-fa="${f.id}" data-v="${v}">${l}</button>`).join(''):
+        `<button class="chip plain" data-fa="${f.id}" data-v="y">是</button><button class="chip plain" data-fa="${f.id}" data-v="n">否</button>`}
+      <span class="small muted">${f.opts?'':`（回答「是」剩 ${yes} 種）`}</span></div>`).join('');
+}
+
+/* ---------- 問答卡片（RAG 模擬） ---------- */
+function renderAnswer(rows){
+  const box=$('#answerCard');
+  if(!lastAnswer){box.style.display='none';return}
+  const a=lastAnswer; let extra='';
+  if(a.breed){
+    const r=rows.find(r=>r.b.id===a.breed.id);
+    const oc=conds.filter(c=>CONDS[c].group!=='species');
+    if(r&&oc.length) extra = r.miss.length?`<div style="margin-top:8px">依你目前的條件：${ifCan(a.breed,r.miss)}</div>`:`<div class="notice good small">依你目前的條件，${esc(a.breed.name)}符合全部條件。</div>`;
+    const better=rows.filter(x=>!x.miss.length&&x.b.id!==a.breed.id).slice(0,3);
+    if(oc.length&&r&&r.miss.length&&better.length) extra+=`<div class="small" style="margin-top:6px">更符合你條件的品種：${better.map(x=>`<button class="chip plain" data-open="${x.b.id}">${esc(x.b.name)}</button>`).join(' ')}</div>`;
+  }
+  box.style.display='block';
+  box.innerHTML=`<div class="small muted">你問：「${esc(a.q)}」</div><p style="margin:6px 0">${esc(a.text)}</p>${extra}
+    ${a.src?`<div class="src">📚 ${esc(a.src)}</div>`:''}${a.breed?`<button class="btn ghost sm" style="margin-top:8px" data-open="${a.breed.id}">查看${esc(a.breed.name)}詳細資料</button>`:''}
+    <div class="small muted" style="margin-top:6px">※ 僅供參考，不取代獸醫建議</div>`;
+}
+
+/* ---------- 地圖卡片 ---------- */
+function renderMapCard(){
+  $('#mapCard').style.display=home?'block':'none';
+  if(!home) return;
+  const fired=ENV_RULES.filter(r=>r.when(env));
+  $('#envFired').innerHTML=`<b>套用的規則：</b>`+fired.map(r=>`<span class="tag" style="margin:2px">${r.id} ${esc(r.msg)}</span>`).join(' ');
 }
 
 /* ===================== 品種詳細頁 ===================== */
@@ -696,16 +762,22 @@ function renderBreed(){
       <tr><th>一次性</th><td>${c.reg}</td></tr>
       <tr><th>每年開銷</th><td>約 ${money(annual)}<div class="small muted">農業部平均 ${sp} ${c.annual.toLocaleString()} 元／年 × 體型係數 ${SIZE_MULT[b.size]}（係數為示意，待討論）</div></td></tr>
     </table></div>
-    <h3>購買 vs. 領養</h3>
+    <h3>購買 vs. 領養</h3><p class="small muted" style="margin:-2px 0 6px">兩種方式並列比較，由你自行決定。</p>
     <div class="tablewrap"><table>
       <tr><th>比較項目</th><th>購買幼${sp}</th><th>領養</th></tr>
       <tr><td>取得費用</td><td>${b.price?`${money(b.price[0])} – ${money(b.price[1])}<div class="small muted">查價日期：待查（示意）</div>`:'較少業者販售'}</td><td>公立收容所多為免費或低額（各縣市不同），可享登記費減免</td></tr>
       <tr><td>年齡</td><td>多為幼${sp}</td><td>幼${sp}到成${sp}都有</td></tr>
       <tr><td>健康資訊</td><td>業者提供的健康證明</td><td>收容所提供絕育、疫苗紀錄</td></tr>
-      <tr><td>取得管道</td><td>${b.species==='dog'?'合法業者（附特定寵物業許可證字號）— 待整理':'貓的業者許可規定待向動保處確認'}</td><td>公立收容所（動物認領養 API）</td></tr>
+      <tr><td>取得管道</td><td>不推薦個別業者。請要求出示<b>特定寵物業許可證</b>、確認幼${sp}已植晶片並登記；合法業者可查政府公開名冊（如臺北市特定寵物業分區名冊）${b.species==='cat'?'<div class="small muted">貓的業者許可規定待向動保處確認</div>':''}</td><td>公立收容所（動物認領養 API）</td></tr>
       <tr><td>目前數量</td><td>依業者</td><td><b>${sc}</b> 隻<span class="small muted">（示意，正式版接 API 即時資料）</span></td></tr>
     </table></div>
-    ${!sc?`<div class="notice info">收容所目前沒有此品種。體型、個性相近的收容動物：${sim.length?sim.map(s=>`<button class="chip plain" data-open="${s.id}">${esc(s.name)}（${shelterCount(s)} 隻）</button>`).join(' '):'米克斯（混種）'}</div>`:''}
+    ${!sc?`<div class="notice info">收容所目前沒有${esc(b.name)}。
+      <details style="margin-top:6px"><summary>查看體型、年紀相近的收容動物</summary>
+        <div style="margin-top:6px">${sim.length?sim.map(s=>`<button class="chip plain" data-open="${s.id}">${esc(s.name)}（${shelterCount(s)} 隻）</button>`).join(' '):`米克斯（混種）${b.species==='dog'?'犬':'貓'}`}</div>
+        <div class="small muted" style="margin-top:4px">混種的個性與外型差異大，建議到收容所實際互動。正式版依收容所 API 的體型、年紀欄位篩選（此為示意）。</div>
+      </details></div>`:''}
+    <h3>問問寵物配對 AI</h3>
+    <div class="chips">${[`${b.name}適合住公寓嗎？`,`${b.name}一年大概花多少錢？`,`${b.name}常見疾病？`].map(q=>`<button class="chip plain" data-askq="${esc(q)}">${esc(q)}</button>`).join('')}</div>
     <p class="small muted" style="margin-top:14px">本站不參與交易；內容僅供參考，不取代獸醫或收容所評估。品種資料來源：國際犬／貓種協會公開資料（改寫）、農業部飼養照護指南（測試版尚未查證）。</p>`;
 }
 function showTab(name){
@@ -764,7 +836,10 @@ function renderNearby(){
 }
 function setHome(pos,label){
   home=pos; envDraft=factorsAt(pos); envLabel=label;
-  renderEnvInputs(); renderNearby(); drawHome();
+  syncEnv(); renderEnvInputs(); renderNearby(); drawHome();
+}
+function syncEnv(){
+  env=home?{...envDraft,housing:conds.includes('apartment')?'apartment':null,label:envLabel}:null;
 }
 function drawHome(){
   const g=document.getElementById('homeLayer'); if(!g||!home) return;
@@ -805,7 +880,7 @@ function initMap(){
   svg.addEventListener('click',e=>{
     const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
     const q=pt.matrixTransform(svg.getScreenCTM().inverse());
-    setHome([Math.round(q.x),Math.round(q.y)],'地圖選點');
+    setHome([Math.round(q.x),Math.round(q.y)],'地圖選點'); render();
   });
 }
 // 規則表：when(env) 環境條件、target(b) 影響品種、delta 加減分（0=只提醒）
@@ -815,35 +890,17 @@ const ENV_RULES = [
   {id:'R3',cond:'附近有國小、幼兒園',range:'300 m',effect:'吠叫多的品種 −1；攻擊性高或危險犬種提醒',msg:'附近孩童多，外出需特別注意管理',when:e=>e.school,target:b=>b.bark>=4,delta:-1},
   {id:'R4',cond:'附近沒有動物醫院',range:'1 km',effect:'好發疾病多的品種提醒',msg:'就醫較不方便',when:e=>!e.vet,target:b=>b.disease>=4,delta:0},
   {id:'R5',cond:'附近沒有 24 小時急診',range:'5 km',effect:'一般提醒',msg:'夜間急診可能需要較遠的車程',when:e=>!e.er,target:()=>true,delta:0},
-  {id:'R6',cond:'住宅類型：公寓（使用者自填）',range:'—',effect:'吠叫多、大型犬 −1',msg:'公寓需注意噪音與空間',when:e=>e.housing==='apartment',target:b=>b.bark>=4||(b.species==='dog'&&b.size==='大'),delta:-1},
+  {id:'R6',cond:'住宅類型：公寓（由對話取得）',range:'—',effect:'吠叫多、大型犬 −1',msg:'公寓需注意噪音與空間',when:e=>e.housing==='apartment',target:b=>b.bark>=4||(b.species==='dog'&&b.size==='大'),delta:-1},
   {id:'R7',cond:'台灣氣候（全區適用）',range:'—',effect:'短鼻品種提醒',msg:'夏季中暑風險較高',when:()=>true,target:b=>!!b.brachy,delta:0},
 ];
 let envDraft={park:1,school:0,vet:1,er:1}, envLabel='自訂';
 function renderEnvInputs(){
-  $('#scenarios').innerHTML=SCENARIOS.map((s,i)=>`<button class="chip plain" data-sc="${i}">${s.label}</button>`).join('');
   $('#envChecks').innerHTML=ENV_FACTORS.map(f=>`<label><input type="checkbox" data-f="${f.k}" ${envDraft[f.k]?'checked':''}> ${f.label}</label>`).join('');
   $('#ruleTable').innerHTML='<tr><th>編號</th><th>環境條件</th><th>範圍</th><th>影響</th><th>顯示給使用者的說明</th></tr>'+
     ENV_RULES.map(r=>`<tr><td>${r.id}</td><td>${r.cond}</td><td>${r.range}</td><td>${r.effect}</td><td>${r.msg}</td></tr>`).join('');
 }
-function runEnv(){
-  const addr=$('#addr').value.trim();
-  env={...envDraft,housing:$('#housing').value,label:addr?`${addr}（${envLabel}）`:envLabel};
-  const fired=ENV_RULES.filter(r=>r.when(env));
-  const ranked=BREEDS.map(b=>({b,...envAdjust(b)})).sort((x,y)=>y.delta-x.delta);
-  const up=ranked.filter(r=>r.delta>0), down=ranked.filter(r=>r.delta<0);
-  $('#envResult').style.display='block';
-  $('#envResult').innerHTML=`<h2>評估結果：${esc(env.label)}</h2>
-    <h3>觸發的規則</h3>
-    <ul class="pc">${fired.map(r=>`<li><b>${r.id}</b> ${r.cond} → ${r.effect}<span class="muted">（${r.msg}）</span></li>`).join('')}</ul>
-    <div class="two">
-      <div><h3>加分品種</h3>${up.length?up.map(r=>`<div><span class="delta p">+${r.delta}</span> ${esc(r.b.name)}</div>`).join(''):'<span class="muted">無</span>'}</div>
-      <div><h3>減分品種</h3>${down.length?down.map(r=>`<div><span class="delta m">${r.delta}</span> ${esc(r.b.name)}</div>`).join(''):'<span class="muted">無</span>'}</div>
-    </div>
-    <p class="small muted">只加減分與提醒，不直接排除。結果已套用到「① 搜尋配對」。</p>`;
-  render();
-}
 
-/* ===================== AI 顧問（模擬 RAG） ===================== */
+/* ===================== 問答（模擬 RAG） ===================== */
 const ALIASES={poodle:['貴賓','泰迪'],maltese:['馬爾濟斯'],shihtzu:['西施'],pomeranian:['博美'],chihuahua:['吉娃娃'],dachshund:['臘腸'],frenchie:['法鬥','法國鬥牛'],pug:['巴哥'],shiba:['柴犬','柴柴'],corgi:['柯基'],border:['邊境','邊牧'],golden:['黃金'],labrador:['拉布拉多','拉拉'],husky:['哈士奇'],mixdog:['米克斯狗','台灣犬','土狗','混種犬'],mixcat:['米克斯貓','混種貓','米克斯'],bsh:['英短','英國短毛'],ash:['美短','美國短毛'],ragdoll:['布偶'],siamese:['暹羅'],munchkin:['曼赤肯','短腿貓'],persian:['波斯']};
 const TOPICS=[
   {k:'shed',re:/掉毛|過敏|毛/},{k:'apartment',re:/公寓|套房|大樓|空間/},{k:'bark',re:/吠|叫|吵/},
@@ -862,7 +919,7 @@ function answer(q){
   const n=b.name, c=COSTS[b.species];
   const map={
     shed:`${n}的掉毛程度為「${lvl(b.shed)}」（${b.shed}/5）。${b.shed>=4?'掉毛多，需要經常梳毛與打掃，對毛過敏的人要特別考慮。':b.shed<=2?'掉毛較少，相對適合輕度過敏者，但仍建議先實際接觸看看。':'需定期梳毛。'}美容：${b.care.groom}。`,
-    apartment:`${n}${b.apartment>=2?'適合':b.apartment===1?'可以住':'不太適合'}公寓。${b.bark>=4?'不過牠'+(b.species==='dog'?'吠叫':'叫聲')+'較多，需注意鄰居噪音。':''}${b.exercise>=4?'運動量大，住公寓需每天安排足夠的戶外運動。':''}`,
+    apartment:`${n}${b.apartment>=2?'適合住':b.apartment===1?'可以住，但不是最理想的':'不太適合住'}公寓。${b.bark>=4?'不過牠'+(b.species==='dog'?'吠叫':'叫聲')+'較多，需注意鄰居噪音。':''}${b.exercise>=4?'運動量大，住公寓需每天安排足夠的戶外運動。':''}`,
     bark:`${n}的${b.species==='dog'?'吠叫':'叫聲'}程度為「${lvl(b.bark)}」（${b.bark}/5）。`,
     exercise:`${n}的運動量為「${lvl(b.exercise)}」。建議：${b.care.exercise}。`,
     cost:`${n}${b.price?`購買價約 ${money(b.price[0])}–${money(b.price[1])}（示意，待查價）`:'以領養為主'}；一次性費用：${c.reg}；每年開銷約 ${money(c.annual*SIZE_MULT[b.size])}（示意估算）。`,
@@ -876,13 +933,6 @@ function answer(q){
   const text=t?map[t.k]:`${n}：${b.pros.join('、')}；需注意：${b.cons.join('、')}。你可以再問掉毛、吠叫、運動量、費用或常見疾病。`;
   return {text,src:SRC+`〈${n}〉`+(t&&(t.k==='disease'||t.k==='exercise')?'；農業部飼養照護指南':'')};
 }
-function ask(q){
-  q=q.trim(); if(!q) return;
-  const a=answer(q), chat=$('#chat');
-  chat.insertAdjacentHTML('beforeend',`<div class="msg u">${esc(q)}</div><div class="msg a">${esc(a.text)}${a.src?`<div class="src">📚 ${esc(a.src)}</div>`:''}</div>`);
-  chat.scrollTop=chat.scrollHeight; $('#ask').value='';
-}
-
 /* ===================== 品質評估 ===================== */
 const TESTS=[
   {type:'標籤',q:'我是新手，住小套房',expect:['newbie','apartment','small']},
@@ -898,9 +948,13 @@ const TESTS=[
   {type:'顧問',q:'今天天氣如何？',must:/無法回答/,needSrc:false},
   {type:'顧問',q:'我的狗一直拉肚子怎麼辦',must:/無法回答.*獸醫/,needSrc:false},
   {type:'法規',q:'比特犬適合我嗎？',must:/禁止飼養/,legal:true},
+  {type:'理解',q:'我住大安區的公寓',check:u=>u.loc&&u.loc.label==='大安區'&&u.ids.includes('apartment')&&!u.question,exp:'地點：大安區＋條件：適合公寓'},
+  {type:'理解',q:'柯基適合住公寓嗎？',check:u=>u.question&&u.breed&&u.breed.id==='corgi'&&!u.ids.length,exp:'問題（柯基），不加條件'},
+  {type:'理解',q:'我住公寓，柯基可以嗎？',check:u=>u.question&&u.breed&&u.breed.id==='corgi'&&u.ids.includes('apartment'),exp:'問題（柯基）＋條件：適合公寓'},
+  {type:'理解',q:'我住台中，想養貓',check:u=>u.outside&&!u.loc&&u.ids.includes('cat'),exp:'台北市以外＋條件：貓'},
 ];
 function runEval(){
-  let tagOk=0,tagN=0,srcOk=0,srcN=0,legalOk=0,legalN=0;
+  let tagOk=0,tagN=0,srcOk=0,srcN=0,legalOk=0,legalN=0,undOk=0,undN=0;
   const rows=TESTS.map(t=>{
     let pass,got;
     if(t.type==='標籤'){
@@ -909,6 +963,12 @@ function runEval(){
       pass=p.length===t.expect.length && t.expect.every(e=>p.includes(e));
       tagN++; if(pass) tagOk++;
       return {t,got,pass,exp:t.expect.map(i=>CONDS[i].label).join('、')};
+    }
+    if(t.type==='理解'){
+      const u=understand(t.q);
+      got=[u.ids.length?'條件：'+u.ids.map(i=>i==='__banned'?'禁養':CONDS[i].label).join('、'):'',u.loc?'地點：'+u.loc.label:'',u.outside?'台北市以外':'',u.question?'問題'+(u.breed?'（'+u.breed.name+'）':''):''].filter(Boolean).join('＋')||'（無）';
+      pass=!!t.check(u); undN++; if(pass) undOk++;
+      return {t,got,pass,exp:t.exp};
     }
     const a=answer(t.q);
     got=a.text+(a.src?` 〔${a.src}〕`:'');
@@ -919,6 +979,7 @@ function runEval(){
   });
   const pct=(a,b)=>b?Math.round(a/b*100)+'%':'—';
   $('#kpis').innerHTML=`<div class="kpi">標籤正確率<b>${pct(tagOk,tagN)}</b><span class="small muted">${tagOk}/${tagN}</span></div>
+    <div class="kpi">輸入理解正確率<b>${pct(undOk,undN)}</b><span class="small muted">${undOk}/${undN}</span></div>
     <div class="kpi">附來源比例<b>${pct(srcOk,srcN)}</b><span class="small muted">${srcOk}/${srcN}</span></div>
     <div class="kpi">法規題正確率<b>${pct(legalOk,legalN)}</b><span class="small muted">${legalOk}/${legalN}</span></div>
     <div class="kpi">整體通過<b>${pct(rows.filter(r=>r.pass).length,rows.length)}</b><span class="small muted">${rows.filter(r=>r.pass).length}/${rows.length}</span></div>`;
@@ -928,20 +989,19 @@ function runEval(){
 
 /* ===================== 待決事項 ===================== */
 const TODO=[
-  [0,'AI 服務與預算（可詢問學校是否提供帳號或額度）'],[1,'地圖範圍：台北市'],[1,'地圖資料來源：混合方案'],
-  [0,'Google 帳號綁卡人選與用量上限設定'],[0,'環境評估規則定案（待組內討論與專家審核）'],[0,'「大型公園」的定義門檻'],
-  [0,'技術棧'],[0,'各標籤的判斷標準與參考來源'],[0,'負責確認業者許可證的人員'],[0,'貓的買賣是否需要許可證（向動保處確認）'],
-  [0,'內容審核人選（獸醫／老師）'],[0,'8 週詳細時程與每週里程碑'],
+  [1,'功能整併：寵物配對 AI／品種詳細頁／AI 品質評估'],[1,'地圖範圍：台北市；資料來源：混合方案'],[1,'購買管道：辨識提醒＋政府合法業者名冊'],
+  [0,'AI 服務（模型）與預算（可詢問學校是否提供帳號或額度）'],[0,'前端、後端框架與資料庫'],[0,'問答的檢索方式（向量資料庫或關鍵字索引）'],
+  [0,'對照實驗要比較的通用 AI 與版本'],[0,'各項 AI 指標的目標值'],[0,'環境評估規則定案、「大型公園」門檻（待專家審核）'],
+  [0,'Google 帳號綁卡人選與用量上限設定'],[0,'各標籤的判斷標準與參考來源'],[0,'貓的買賣是否需要許可證（向動保處確認）'],
+  [0,'內容審核人選（獸醫／老師）'],[0,'444 人台灣研究的論文網址'],
 ];
 
 /* ===================== 事件 ===================== */
-const EX=['我是新手，住小套房','想養小型犬','不要太吵','家裡有小孩','我對毛過敏，想養貓','喜歡爬山','比特犬可以嗎'];
+const EX=['我是新手，住小套房','我住大安區的公寓，想養狗','柯基適合住公寓嗎？','我住公寓，柴犬可以嗎？','家裡有小孩，想養貓','上班族沒時間遛狗','比特犬可以嗎','我的狗一直拉肚子'];
 $('#examples').insertAdjacentHTML('beforeend',EX.map(e=>`<button class="chip plain" data-ex="${esc(e)}">${esc(e)}</button>`).join(''));
-const AEX=['介紹一下柴犬','柯基適合住公寓嗎？','布偶貓會掉毛嗎？','哈士奇每年要花多少錢？','法鬥常見疾病','今天天氣如何？','我的狗一直拉肚子'];
-$('#askExamples').insertAdjacentHTML('beforeend',AEX.map(e=>`<button class="chip plain" data-ask="${esc(e)}">${esc(e)}</button>`).join(''));
 
 document.addEventListener('click',e=>{
-  const el=e.target.closest('[data-sp],[data-tab],[data-rm],[data-ex],[data-ask],[data-sc],[data-open],.breed,#unban');
+  const el=e.target.closest('[data-sp],[data-tab],[data-rm],[data-ex],[data-askq],[data-fa],[data-open],.breed,#unban,#mapClose');
   if(!el) return;
   if(el.dataset.sp){
     conds=conds.filter(c=>CONDS[c].group!=='species');
@@ -951,24 +1011,27 @@ document.addEventListener('click',e=>{
   else if(el.dataset.tab){showTab(el.dataset.tab)}
   else if(el.dataset.rm){conds=conds.filter(c=>c!==el.dataset.rm);render()}
   else if(el.dataset.ex){$('#q').value=el.dataset.ex;submit()}
-  else if(el.dataset.ask){ask(el.dataset.ask)}
-  else if(el.dataset.sc){const s=SCENARIOS[+el.dataset.sc];setHome(s.pos,s.label)}
+  else if(el.dataset.askq){showTab('search');$('#q').value=el.dataset.askq;submit();window.scrollTo(0,0)}
+  else if(el.dataset.fa){
+    const id=el.dataset.fa,v=el.dataset.v;
+    if(id==='sp'){conds=conds.filter(c=>CONDS[c].group!=='species');conds.unshift(v)}
+    else if(v==='y') addConds([id]); else asked.add(id);
+    render();
+  }
+  else if(el.id==='mapClose'){home=null;env=null;render()}
   else if(el.dataset.open){openBreed(el.dataset.open)}
   else if(el.id==='unban'){banned=false;render()}
   else if(el.classList.contains('breed')){openBreed(el.dataset.id)}
 });
-document.addEventListener('change',e=>{if(e.target.dataset.f){envDraft[e.target.dataset.f]=e.target.checked?1:0;envLabel='自訂'}});
+document.addEventListener('change',e=>{if(e.target.dataset.f){envDraft[e.target.dataset.f]=e.target.checked?1:0;envLabel='自訂';render()}});
 renderBreed();
 $('#qbtn').onclick=submit; $('#q').onkeydown=e=>{if(e.key==='Enter')submit()};
-$('#clear').onclick=()=>{conds=[];banned=false;$('#parseInfo').textContent='';render()};
-$('#askBtn').onclick=()=>ask($('#ask').value); $('#ask').onkeydown=e=>{if(e.key==='Enter')ask($('#ask').value)};
-$('#envRun').onclick=runEnv;
-$('#envReset').onclick=()=>{env=null;$('#envResult').style.display='none';render()};
+$('#clear').onclick=()=>{conds=[];banned=false;asked=new Set();lastAnswer=null;home=null;env=null;$('#parseInfo').textContent='';$('#outsideNote')&&$('#outsideNote').remove();render()};
+
 $('#evalRun').onclick=runEval;
 $('#todoTable').innerHTML='<tr><th>狀態</th><th>事項</th></tr>'+TODO.map(([d,t])=>`<tr><td>${d?'<span class="pass">✔ 已決定</span>':'<span class="muted">☐ 待決</span>'}</td><td>${t}</td></tr>`).join('');
 
-initMap(); setHome(SCENARIOS[0].pos,SCENARIOS[0].label); render();
-ask('柯基適合住公寓嗎？');
+initMap(); renderEnvInputs(); render();
 </script>
 </body>
 </html>
