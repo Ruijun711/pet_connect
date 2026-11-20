@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>寵物配對 測試版</title>
+
 <style>
 :root{
   --bg:#faf7f2; --card:#ffffff; --ink:#2b2622; --muted:#7a7068; --line:#e8e1d7;
@@ -50,6 +51,9 @@ input[type=text]{flex:1 1 260px}
 .breed .top{display:flex;align-items:center;gap:10px}
 .emoji{font-size:30px;line-height:1}
 .breed .name{font-weight:600}
+.intro{font-size:13px;color:var(--muted);margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.facts{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;margin:6px 0}
+.facts span b{color:var(--muted);font-weight:500;margin-right:4px}
 .score{margin-left:auto;font-size:12px;padding:2px 8px;border-radius:999px;background:var(--good-soft);color:var(--good);white-space:nowrap}
 .score.partial{background:var(--warn-soft);color:var(--warn)}
 .miss{font-size:12px;color:var(--warn);margin-top:6px}
@@ -76,11 +80,6 @@ th{background:var(--chip);font-weight:600}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:720px){.two{grid-template-columns:1fr}}
 ul.pc{margin:4px 0;padding-left:20px}
-/* modal */
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto;z-index:10}
-.modal.on{display:flex}
-.modal .box{background:var(--card);border-radius:16px;max-width:820px;width:100%;padding:22px;position:relative}
-.close{position:absolute;right:14px;top:10px;background:none;border:none;font-size:26px;color:var(--muted);cursor:pointer}
 /* chat */
 .chat{display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:460px;overflow-y:auto;padding:4px}
 .msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:14px;white-space:pre-wrap}
@@ -95,6 +94,16 @@ ul.pc{margin:4px 0;padding-left:20px}
 .kpis{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
 .kpi{background:var(--chip);border-radius:12px;padding:10px 16px;min-width:140px}
 .kpi b{display:block;font-size:22px}
+#map{border-radius:12px;border:1px solid var(--line);margin:10px 0;overflow:hidden;background:#eef3e8}
+#map svg{display:block;width:100%;height:auto;cursor:crosshair;font-family:inherit}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:4px 0}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.nearby{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:6px;margin:8px 0;font-size:13px}
+.nearby div{background:var(--chip);border-radius:8px;padding:6px 10px}
+.seg{display:inline-flex;background:var(--chip);border-radius:999px;padding:3px;margin:0 0 12px;gap:2px}
+.seg button{font:inherit;font-size:14px;border:none;background:none;color:var(--muted);padding:6px 16px;border-radius:999px;cursor:pointer}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg .n{font-size:12px;color:var(--muted);margin-left:4px;font-weight:400}
 footer{color:var(--muted);font-size:12px;padding:20px 0 40px;text-align:center}
 code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
 </style>
@@ -105,14 +114,17 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
   <header>
     <h1>🐾 寵物配對：養之前，先確認你適不適合</h1>
     <p>用一句話描述你的生活條件，逐步追加條件，找出適合的狗或貓，並比較購買與領養。</p>
+    <p class="small">核心問題：<b>「我適不適合養這隻寵物？」</b>——每個功能都回答這一題。</p>
   </header>
 
   <nav id="nav">
     <button data-tab="search" class="on">① 搜尋配對</button>
-    <button data-tab="env">④ 環境評估</button>
-    <button data-tab="advisor">⑤ AI 顧問</button>
-    <button data-tab="eval">⑥ 品質評估</button>
+    <button data-tab="breed">② 品種詳細頁</button>
+    <button data-tab="env">③ 環境評估</button>
+    <button data-tab="advisor">④ AI 顧問</button>
+    <button data-tab="eval">⑤ 品質評估</button>
     <button data-tab="todo">📋 待決事項</button>
+    <button data-tab="about">ℹ️ 專案說明</button>
   </nav>
 
   <!-- ① 搜尋 -->
@@ -130,6 +142,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
       <div id="legal"></div>
       <div id="envApplied"></div>
     </div>
+    <div class="seg" id="speciesTabs"></div>
     <div id="resultHead" class="row" style="margin-bottom:8px"></div>
     <div class="grid" id="results"></div>
     <div class="discuss" style="margin-top:16px">
@@ -142,19 +155,35 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
     </div>
   </section>
 
-  <!-- ④ 環境 -->
+  <!-- ② 品種詳細頁 -->
+  <section class="tab" id="tab-breed">
+    <button class="btn ghost sm" data-tab="search" style="margin-bottom:12px">← 回到搜尋結果</button>
+    <div class="card" id="breedBox"></div>
+  </section>
+
+  <!-- ③ 環境 -->
   <section class="tab" id="tab-env">
     <div class="card">
       <h2>地圖環境評估（台北市 MVP）</h2>
-      <p class="small muted">正式版：輸入地址 → Google Geocoding 轉座標 → 查 OSM 公園／學校、臺北市動物醫院開放資料 → 套用規則表。<br>測試版：選擇情境或手動勾選周邊條件。住址只取大概位置，不存入資料庫。</p>
+      <p class="small muted">正式版：輸入地址 → Google Geocoding 轉座標 → 查 OSM 公園／學校、臺北市動物醫院開放資料 → 套用規則表。<br>測試版：<b>在地圖上點一下你住的位置</b>，或選擇情境，系統會自動判斷周邊條件（也可手動調整勾選）。住址只取大概位置，不存入資料庫。</p>
       <div class="row">
-        <input type="text" id="addr" placeholder="輸入地址（測試版不會實際查詢）">
+        <input type="text" id="addr" placeholder="地址備註（測試版不會實際查詢，請直接點地圖）">
         <select id="housing">
           <option value="apartment">公寓／大樓</option>
           <option value="house">透天／有院子</option>
         </select>
       </div>
       <div class="chips" id="scenarios"></div>
+      <div id="map"></div>
+      <div class="legend">
+        <span><i style="background:#2f8a5b"></i>公園／狗運動公園</span>
+        <span><i style="background:#b7791f"></i>國小／幼兒園</span>
+        <span><i style="background:#3b6fd9"></i>動物醫院</span>
+        <span><i style="background:#c0392b"></i>24 小時急診動物醫院</span>
+        <span><i style="background:#d9733b"></i>你的位置（虛線圈：300 m／1 km）</span>
+      </div>
+      <p class="small muted" style="margin:2px 0">⚠ 這是<b>示意地圖</b>（虛構街區，不是真實地理位置），用來展示流程。正式版改用 Leaflet＋OpenStreetMap 真實地圖與臺北市開放資料。</p>
+      <div class="nearby" id="nearby"></div>
       <div class="envgrid" id="envChecks"></div>
       <div class="row">
         <button class="btn" id="envRun">評估並套用到搜尋結果</button>
@@ -167,18 +196,39 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
       <p class="small muted">原則：只加減分與提醒，不直接排除（唯一例外：法規禁養）；每條規則附說明；每條規則都對應一題品質評估測試。數字為建議值，待審核。</p>
       <div class="tablewrap"><table id="ruleTable"></table></div>
     </div>
+    <div class="card">
+      <h2>資料來源（混合方案，台北市）</h2>
+      <div class="tablewrap"><table>
+        <tr><th>資料</th><th>來源</th><th>說明</th></tr>
+        <tr><td>地址轉座標</td><td>Google Geocoding API</td><td>每月 10,000 次免費；需綁卡，須設用量上限與預算警示；結果快取</td></tr>
+        <tr><td>公園、學校</td><td>OpenStreetMap（Overpass API）</td><td>免費，須標示 OSM 資料來源；完整度需實測</td></tr>
+        <tr><td>動物醫院</td><td>臺北市動物醫院一覽表、夜間急診／24 小時動物醫院一覽表</td><td>政府開放資料；只有地址，需先轉成座標存起來</td></tr>
+        <tr><td>狗運動公園／狗活動區</td><td>臺北市動保處公告，組員手動整理</td><td>數量少，可手動維護</td></tr>
+        <tr><td>地圖畫面</td><td>Leaflet＋OSM 圖層</td><td>免費</td></tr>
+      </table></div>
+      <p class="small muted">備案：無法綁卡時，地址轉座標改用 OSM 的免費服務（需遵守使用頻率限制）。</p>
+      <h3>規則負責與審核流程</h3>
+      <ol class="small" style="margin:4px 0;padding-left:20px">
+        <li>地圖組員：起草規則表與距離</li>
+        <li>資料組員：對照品種標籤，確認每條規則影響哪些品種</li>
+        <li>有程式背景組員：把規則轉成品質評估測試題</li>
+        <li>獸醫或動物相關科系老師：審核（尤其是攻擊性、醫療相關規則）</li>
+        <li>組內討論定案，之後修改都要更新測試題</li>
+      </ol>
+      <p class="small muted">距離參考步行時間：300 m 約 4 分鐘、1 km 約 12–15 分鐘；台北市動物醫院密度高，故「附近沒有動物醫院」用 1 km。</p>
+    </div>
     <div class="discuss">
       <b>🗣 討論點（環境評估）</b>
       <ul>
         <li>「大型公園」的面積門檻要訂多少？</li>
         <li>規則與距離（300 m／1 km／5 km）需請獸醫或動物相關科系老師審核。</li>
         <li>Google 帳號綁卡人選與用量上限、預算警示設定。</li>
-        <li>第 5 週若落後：改為只顯示文字結果（本測試版即為文字版）。</li>
+        <li>第 5 週若落後：拿掉互動地圖，改為只顯示文字結果（地圖下方的「周邊設施」清單即為文字版）。</li>
       </ul>
     </div>
   </section>
 
-  <!-- ⑤ 顧問 -->
+  <!-- ④ 顧問 -->
   <section class="tab" id="tab-advisor">
     <div class="card">
       <h2>AI 寵物顧問（RAG 模擬）</h2>
@@ -200,7 +250,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
     </div>
   </section>
 
-  <!-- ⑥ 評估 -->
+  <!-- ⑤ 評估 -->
   <section class="tab" id="tab-eval">
     <div class="card">
       <h2>AI 品質評估（開發做法，使用者看不到）</h2>
@@ -229,12 +279,138 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
       <h2>分工建議（6 人／8 週：2026/11/27 – 2027/1/21）</h2>
       <div class="tablewrap"><table>
         <tr><th>成員</th><th>負責</th><th>對應測試版頁面</th></tr>
-        <tr><td>有程式背景 1–2 人</td><td>AI 寵物顧問、AI 品質評估、後端（品種資料庫、收容所 API）</td><td>⑤ ⑥</td></tr>
-        <tr><td>新手 2 人</td><td>前端頁面（搜尋、品種頁、比較頁）</td><td>① 品種詳細頁</td></tr>
-        <tr><td>新手 1 人</td><td>地圖與環境評估規則</td><td>④</td></tr>
-        <tr><td>新手 1 人</td><td>品種資料、標籤、價格、照顧內容、測試題目</td><td>資料、⑥ 題目</td></tr>
+        <tr><td>有程式背景 1–2 人</td><td>AI 寵物顧問、AI 品質評估、後端（品種資料庫、收容所 API）</td><td>④ ⑤</td></tr>
+        <tr><td>新手 2 人</td><td>前端頁面（搜尋、品種頁、比較頁）</td><td>① ② 品種詳細頁</td></tr>
+        <tr><td>新手 1 人</td><td>地圖與環境評估規則</td><td>③</td></tr>
+        <tr><td>新手 1 人</td><td>品種資料、標籤、價格、照顧內容、測試題目</td><td>資料、⑤ 題目</td></tr>
       </table></div>
-      <p class="small muted">第 5 週檢查進度，落後時依序縮減：① 地圖改只顯示文字 ② AI 顧問限定部分品種。核心（1–3）與品質評估不縮減。</p>
+      <p class="small muted">第 5 週檢查進度，落後時依序縮減：(1) 地圖改只顯示文字 (2) AI 顧問限定部分品種。核心（1–3）與品質評估不縮減。</p>
+    </div>
+  </section>
+
+  <!-- 專案說明 -->
+  <section class="tab" id="tab-about">
+    <div class="card">
+      <h2>要解決的問題</h2>
+      <ul class="pc">
+        <li>想養寵物的人不清楚哪種品種適合自己的生活條件</li>
+        <li>不清楚購買價格、每年開銷與照顧需求</li>
+        <li>買和領養的資訊分散，難以比較</li>
+        <li>不清楚自己的居住環境適合養哪種寵物</li>
+      </ul>
+      <p class="small muted">目標使用者：第一次養寵物的新手、正在考慮買或領養的人、想先了解費用與照顧責任的人。</p>
+    </div>
+
+    <div class="card">
+      <h2>為什麼值得做</h2>
+      <div class="kpis">
+        <div class="kpi">台灣寵物市場<b>800 億+</b><span class="small muted">台經院推估</span></div>
+        <div class="kpi">家犬＋家貓<b>320 萬隻</b><span class="small muted">農業部 114 年調查</span></div>
+        <div class="kpi">開銷比預期高<b>61%</b><span class="small muted">美國 ValuePenguin</span></div>
+        <div class="kpi">養前研究醫療費<b>約 1/5</b><span class="small muted">英國 Dogs Trust 2026</span></div>
+      </div>
+      <h3>市場規模</h3>
+      <ul class="pc small">
+        <li>台灣寵物市場規模已突破新臺幣 800 億元，預估 3 年內有望突破 1,000 億元（台灣經濟研究院推估）</li>
+        <li>114 年推估家犬 146 萬隻、家貓 174 萬隻，家貓兩年增加 32.8%（農業部）</li>
+      </ul>
+      <h3>痛點：多數人養之前沒有準備好</h3>
+      <ul class="pc small">
+        <li>只有約五分之一的狗主人在養之前研究過醫療費用（英國 Dogs Trust，2026，逾 34 萬人參與）</li>
+        <li>61% 飼主認為開銷比預期高，同樣 61% 沒有事先研究費用（美國 ValuePenguin，2,000 人）</li>
+        <li>46% 新狗主人找狗前沒規劃每月預算；36% 覺得比想像中貴、46% 比想像中花時間（英國 Tailwise，1,000 人）</li>
+      </ul>
+      <h3>解法依據：準備越充分，養得越好（台灣研究）</h3>
+      <div class="notice good small">針對 444 位台灣狗主人的研究發現，飼主的知識與動機是成功飼養最強的預測因素；準備較充分者會選擇較合適的取得管道、行為問題也較少。<br><span class="muted">"The shop, the dog, or the owner? Investigating the pathway of dog relinquishment in Taiwan"</span></div>
+      <h3>棄養原因多半可事先評估</h3>
+      <ul class="pc small">
+        <li>台灣：不擬續養原因以搬家、沒時間照顧、行為問題（以吠叫為主）、未絕育生小狗、生重病居多（報導年份較早）</li>
+        <li>美國 ASPCA（2015）：寵物問題 46%、家庭問題 27%、住房問題 18%；家庭問題中過敏 24%；住房問題中房東 43%、空間不足 39%</li>
+        <li>對應本站標籤：吠叫程度、體型／適合公寓、掉毛程度、價格與每年開銷</li>
+      </ul>
+      <div class="notice warn small">⚠ 注意：ASPCA 收容所配對計畫的獨立評估（Animals, 2023）未發現可可靠歸因的成效。因此本專案<b>不宣稱「配對可降低棄養」</b>，而以「幫助使用者在養之前做足準備」為主要論點。國外資料引用時須註明國家與年份。</div>
+    </div>
+
+    <div class="card">
+      <h2>競品分析</h2>
+      <div class="tablewrap"><table>
+        <tr><th>類型</th><th>代表</th><th>做到的</th><th>缺少的</th></tr>
+        <tr><td>國外品種推薦測驗</td><td>Dogster Breed Selector、Royal Canin、Purina、Petplan</td><td>依生活條件推薦品種並評分</td><td>固定問卷、無台灣價格與領養資訊</td></tr>
+        <tr><td>中文品種資訊／AI 工具</td><td>Royal Canin 台灣常見犬種文章、miniwebtool AI 狗狗品種辨識器</td><td>品種介紹、照片辨識、小測驗</td><td>不能搜尋配對，沒有費用與購買、領養管道</td></tr>
+        <tr><td>台灣領養平台</td><td>全國動物收容管理系統、「寵物認養」App、台灣認養地圖</td><td>查詢全台待認養動物</td><td>只做領養，沒有品種推薦與購買資訊</td></tr>
+      </table></div>
+      <h3>本專案的差異化</h3>
+      <ol class="small" style="margin:4px 0;padding-left:20px">
+        <li>自然語言搜尋，可逐步追加條件，不是固定問卷</li>
+        <li>台灣在地化：新台幣價格、台灣法規、台灣收容所資料</li>
+        <li>購買與領養在同一頁比較，不偏向任何一邊</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>功能總覽</h2>
+      <div class="tablewrap"><table>
+        <tr><th>#</th><th>功能</th><th>類型</th><th>回答的問題</th><th>測試版位置</th></tr>
+        <tr><td>1</td><td>搜尋＋追加條件</td><td>核心</td><td>依我的生活條件，適合哪些品種？</td><td>① 搜尋配對</td></tr>
+        <tr><td>2</td><td>品種詳細頁</td><td>核心</td><td>這個品種的特徵、照顧與費用？</td><td>② 品種詳細頁</td></tr>
+        <tr><td>3</td><td>購買與領養比較</td><td>核心</td><td>該買還是領養？</td><td>② 品種詳細頁下方</td></tr>
+        <tr><td>4</td><td>地圖環境評估</td><td>亮點</td><td>依我住的地方（台北市），適合哪些品種？</td><td>③ 環境評估</td></tr>
+        <tr><td>5</td><td>AI 寵物顧問（RAG）</td><td>亮點</td><td>關於這個品種，我還想問……</td><td>④ AI 顧問</td></tr>
+        <tr><td>6</td><td>AI 品質評估</td><td>開發做法</td><td>證明上面的 AI 是可靠的</td><td>⑤ 品質評估</td></tr>
+      </table></div>
+      <p class="small muted">AI 負責：句子轉標籤、把結果寫成好讀的說明、依資料庫回答問題（RAG）。AI 不負責產生品種資料，資料一律來自自建資料庫；AI 失靈時以關鍵字比對備案。</p>
+    </div>
+
+    <div class="card">
+      <h2>資料來源</h2>
+      <div class="tablewrap"><table>
+        <tr><th>資料</th><th>來源</th><th>備註</th></tr>
+        <tr><td>收容動物</td><td>政府資料開放平台「動物認領養」API</td><td>每日更新、免費；品種欄位多為混種</td></tr>
+        <tr><td>收容統計</td><td>全國公立動物收容所收容處理情形統計表</td><td>各縣市每月收容數、認領養率，可做報告圖表</td></tr>
+        <tr><td>照顧指南</td><td>農業部動物保護資訊網飼養照護指南</td><td>官方來源</td></tr>
+        <tr><td>品種特徵</td><td>國際犬種／貓種協會公開資料</td><td>需自行改寫，不可直接複製</td></tr>
+        <tr><td>購買價格</td><td>台灣動物社會研究會一覽表＋向合法業者查價</td><td>年份不明，需更新並標示查價日期</td></tr>
+        <tr><td>每年開銷</td><td>農業部飼主支出統計</td><td>犬約 14,144 元／年、貓約 13,026 元／年</td></tr>
+        <tr><td>登記費用</td><td>農業部</td><td>犬、貓均須登記；晶片 300 元；登記費已絕育 500、未絕育 1,000 元</td></tr>
+        <tr><td>地圖與周邊設施</td><td>Google Geocoding、OpenStreetMap、臺北市動物醫院開放資料、臺北市狗運動公園</td><td>詳見 ③ 環境評估</td></tr>
+      </table></div>
+    </div>
+
+    <div class="card">
+      <h2>法規與風險</h2>
+      <ul class="pc small">
+        <li><b>禁養犬種</b>：比特犬全面禁養，不收錄</li>
+        <li><b>危險犬種</b>：日本土佐犬、紐波利頓犬、阿根廷杜告犬、巴西菲勒犬、獒犬，若收錄須標示「有法規限制、不適合新手」</li>
+        <li><b>購買連結</b>：犬隻買賣須有特定寵物業許可證，只連結有許可證的業者並顯示字號；貓的規定待向動保處確認</li>
+        <li><b>免責聲明</b>：本站不參與交易；內容僅供參考，不取代獸醫或收容所評估</li>
+        <li><b>內容正確性</b>：建議請獸醫或動物相關科系老師審核</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>範圍與未來擴充</h2>
+      <div class="two">
+        <div><h3>第一階段（本專題）</h3>
+          <ul class="pc small">
+            <li>狗約 15–20 種、貓約 10 種（台灣常見品種）</li>
+            <li>功能 1–6、收容所 API 串接</li>
+            <li>先不做：會員系統、收藏、留言評價</li>
+          </ul></div>
+        <div><h3>第二階段（屬於「養了之後」）</h3>
+          <ul class="pc small">
+            <li>健康管理：飲食建議、份量計算、「出現這些症狀要就醫」警示清單（不做診斷）</li>
+            <li>地圖附加圖層：寵物餐廳、美容院等</li>
+          </ul></div>
+      </div>
+      <h3>未來擴充：其他動物（建議順序）</h3>
+      <ol class="small" style="margin:4px 0;padding-left:20px">
+        <li><b>兔、倉鼠等小型哺乳類</b>：最容易，標籤與犬貓相近</li>
+        <li><b>魚類</b>：照顧資訊單純、價格低、風險小</li>
+        <li><b>鳥類</b>：壽命長、噪音大，需注意禽類防疫議題</li>
+        <li><b>爬蟲類</b>：最需法規標示與成體大小警示（例如綠鬣蜥須登記），社會價值與難度皆最高</li>
+        <li><b>昆蟲</b>：飼養期短，可只做資訊頁、不做推薦</li>
+      </ol>
+      <p class="small muted">現階段準備：資料庫設計為「物種類別＋通用標籤＋類別專屬標籤」，並加「法規狀態」欄位（可飼養／需登記／禁養）。新增物種只需加資料、不改架構。農業部研議的 955 種禁養名單生效進度待確認。</p>
     </div>
   </section>
 
@@ -243,84 +419,83 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
   </footer>
 </div>
 
-<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
 
 <script>
 /* ===================== 示意資料 ===================== */
 // 分數 1–5；apartment: 2=適合 1=勉強 0=不適合；price: 新台幣購買價區間（示意）
 const BREEDS = [
-  {id:'poodle',name:'貴賓犬（玩具／迷你）',emoji:'🐩',species:'dog',size:'小',newbie:5,shed:1,clingy:5,bark:3,exercise:3,kids:4,elders:5,apartment:2,price:[15000,40000],disease:3,life:'12–15 年',
+  {id:'poodle',origin:'法國（一說德國）',weight:'約 2–7 公斤（玩具／迷你）',intro:'原本是協助獵人從水中叼回獵物的工作犬，蓬鬆捲毛的造型來自當年保暖關節的剪法。貴賓是公認聰明的犬種之一，學習指令快、喜歡和人互動，加上幾乎不掉毛，是台灣城市家庭最常見的小型犬之一。代價是毛會持續生長，需要定期美容，而且很依賴主人，長時間獨處容易焦慮。',name:'貴賓犬（玩具／迷你）',emoji:'🐩',species:'dog',size:'小',newbie:5,shed:1,clingy:5,bark:3,exercise:3,kids:4,elders:5,apartment:2,price:[15000,40000],disease:3,life:'12–15 年',
    pros:['幾乎不掉毛，適合輕度過敏者','聰明好訓練'],cons:['需定期美容','容易分離焦慮'],
    care:{diet:'小型犬飼料，注意控制體重',exercise:'每天散步 2 次，各 20–30 分鐘',groom:'每 4–6 週美容一次',disease:'膝蓋骨脫臼、淚痕、牙周病'}},
-  {id:'maltese',name:'馬爾濟斯',emoji:'🐶',species:'dog',size:'小',newbie:4,shed:1,clingy:5,bark:3,exercise:2,kids:3,elders:5,apartment:2,price:[15000,35000],disease:3,life:'12–15 年',
+  {id:'maltese',origin:'地中海馬爾他島',weight:'約 2–4 公斤',intro:'歷史悠久的伴侶犬，幾千年來就以陪伴人類為主要工作。一身純白長毛是最大特色，個性溫和親人、喜歡被抱，很適合想要安靜陪伴的長輩或小家庭。毛容易打結和產生淚痕，日常梳理和清潔是主要功課。',name:'馬爾濟斯',emoji:'🐶',species:'dog',size:'小',newbie:4,shed:1,clingy:5,bark:3,exercise:2,kids:3,elders:5,apartment:2,price:[15000,35000],disease:3,life:'12–15 年',
    pros:['掉毛少','個性溫和親人'],cons:['毛長需每天梳理','體型小，與幼童互動需注意'],
    care:{diet:'小型犬飼料，少量多餐',exercise:'每天散步 20–30 分鐘',groom:'每天梳毛，定期美容',disease:'淚痕、膝蓋骨脫臼、牙齒問題'}},
-  {id:'shihtzu',name:'西施犬',emoji:'🐕',species:'dog',size:'小',newbie:5,shed:1,clingy:4,bark:2,exercise:1,kids:4,elders:5,apartment:2,price:[12000,30000],disease:3,brachy:true,life:'10–16 年',
+  {id:'shihtzu',origin:'中國（源自西藏犬種）',weight:'約 4–7 公斤',intro:'曾是中國宮廷的寵物犬，名字有「小獅子」的意思。個性穩定、脾氣好，不太需要激烈運動，對新手和長輩都很友善。屬於短鼻犬，台灣夏天要特別注意散熱，眼睛和臉部毛髮也需要常清潔。',name:'西施犬',emoji:'🐕',species:'dog',size:'小',newbie:5,shed:1,clingy:4,bark:2,exercise:1,kids:4,elders:5,apartment:2,price:[12000,30000],disease:3,brachy:true,life:'10–16 年',
    pros:['安靜、脾氣好','運動需求低'],cons:['短鼻，怕熱','眼睛需常清潔'],
    care:{diet:'小型犬飼料',exercise:'短程散步即可，避開炎熱時段',groom:'每天梳毛，每月美容',disease:'眼疾、呼吸道問題'}},
-  {id:'pomeranian',name:'博美犬',emoji:'🦊',species:'dog',size:'小',newbie:3,shed:4,clingy:4,bark:5,exercise:2,kids:2,elders:4,apartment:1,price:[15000,40000],disease:3,life:'12–16 年',
+  {id:'pomeranian',origin:'德國（波美拉尼亞地區）',weight:'約 1.5–3.5 公斤',intro:'由大型雪橇犬逐步培育縮小而來，所以雖然體型迷你，卻保有警覺、勇敢的個性。蓬鬆的雙層毛讓牠看起來像一顆毛球，非常吸睛。缺點是警戒心強、容易吠叫，住公寓要從小訓練；換毛期掉毛量也比外表看起來多。',name:'博美犬',emoji:'🦊',species:'dog',size:'小',newbie:3,shed:4,clingy:4,bark:5,exercise:2,kids:2,elders:4,apartment:1,price:[15000,40000],disease:3,life:'12–16 年',
    pros:['活潑可愛','體型小好照顧'],cons:['容易吠叫','雙層毛，換毛期掉毛多'],
    care:{diet:'小型犬飼料',exercise:'每天散步 2 次',groom:'每週梳毛 2–3 次',disease:'氣管塌陷、膝蓋骨脫臼'}},
-  {id:'chihuahua',name:'吉娃娃',emoji:'🐕',species:'dog',size:'小',newbie:3,shed:2,clingy:5,bark:4,exercise:1,kids:1,elders:4,apartment:2,price:[10000,30000],disease:3,life:'14–16 年',
+  {id:'chihuahua',origin:'墨西哥',weight:'約 1.5–3 公斤',intro:'世界上體型最小的犬種之一，以墨西哥的吉娃娃州命名。對空間需求很低，壽命也長，很適合住小坪數的單身族。個性常常「人小志氣大」，對陌生人警戒、容易吠叫；骨骼細，和幼童相處時要特別小心。',name:'吉娃娃',emoji:'🐕',species:'dog',size:'小',newbie:3,shed:2,clingy:5,bark:4,exercise:1,kids:1,elders:4,apartment:2,price:[10000,30000],disease:3,life:'14–16 年',
    pros:['體型最小，空間需求低','壽命長'],cons:['警戒心強、易吠','骨骼脆弱，不適合幼童'],
    care:{diet:'小型犬飼料，注意低血糖',exercise:'短程散步',groom:'每週梳毛',disease:'膝蓋骨脫臼、心臟病、牙齒問題'}},
-  {id:'dachshund',name:'臘腸犬',emoji:'🌭',species:'dog',size:'小',newbie:3,shed:2,clingy:4,bark:4,exercise:3,kids:3,elders:3,apartment:2,price:[15000,35000],disease:4,life:'12–16 年',
+  {id:'dachshund',origin:'德國',weight:'約 4–12 公斤（迷你／標準）',intro:'德文名字的意思是「獾狗」，短腿長身的體型是為了鑽進地洞追獵物。個性活潑、勇敢又有點固執，對家人很忠心。長背短腿的結構讓牠容易有椎間盤問題，要避免跳上跳下和過胖。',name:'臘腸犬',emoji:'🌭',species:'dog',size:'小',newbie:3,shed:2,clingy:4,bark:4,exercise:3,kids:3,elders:3,apartment:2,price:[15000,35000],disease:4,life:'12–16 年',
    pros:['個性活潑勇敢','體型小'],cons:['易吠','脊椎容易出問題，避免跳上跳下'],
    care:{diet:'嚴格控制體重以保護脊椎',exercise:'每天散步，避免爬樓梯',groom:'每週梳毛',disease:'椎間盤疾病'}},
-  {id:'frenchie',name:'法國鬥牛犬',emoji:'🐶',species:'dog',size:'小',newbie:4,shed:2,clingy:4,bark:1,exercise:2,kids:4,elders:4,apartment:2,price:[40000,100000],disease:5,brachy:true,life:'10–12 年',
+  {id:'frenchie',origin:'法國',weight:'約 8–14 公斤',intro:'由英國的小型鬥牛犬傳到法國後培育而成，蝙蝠般的立耳是招牌特徵。很少吠叫、運動需求不高，被認為是適合公寓的犬種。但牠是短鼻犬，呼吸道先天較弱，怕熱也怕劇烈運動，醫療開銷可能比一般犬種高，購買前要特別評估。',name:'法國鬥牛犬',emoji:'🐶',species:'dog',size:'小',newbie:4,shed:2,clingy:4,bark:1,exercise:2,kids:4,elders:4,apartment:2,price:[40000,100000],disease:5,brachy:true,life:'10–12 年',
    pros:['很少吠叫','適合公寓'],cons:['短鼻犬，台灣夏季中暑風險高','醫療費用可能偏高'],
    care:{diet:'控制體重，避免呼吸負擔',exercise:'短程散步，避開中午',groom:'清潔臉部皺褶',disease:'短吻症候群、皮膚病、脊椎問題'}},
-  {id:'pug',name:'巴哥犬',emoji:'🐶',species:'dog',size:'小',newbie:5,shed:4,clingy:5,bark:2,exercise:1,kids:4,elders:5,apartment:2,price:[15000,40000],disease:5,brachy:true,life:'12–15 年',
+  {id:'pug',origin:'中國',weight:'約 6–8 公斤',intro:'歷史悠久的宮廷伴侶犬，後來在歐洲貴族間流行。皺皺的臉和捲尾巴很討喜，個性溫和、愛撒嬌，對人非常友善。屬於短鼻犬，怕熱且容易打呼；食慾好容易發胖，掉毛量也比想像中多。',name:'巴哥犬',emoji:'🐶',species:'dog',size:'小',newbie:5,shed:4,clingy:5,bark:2,exercise:1,kids:4,elders:5,apartment:2,price:[15000,40000],disease:5,brachy:true,life:'12–15 年',
    pros:['個性溫和、親人','運動需求低'],cons:['短鼻犬，怕熱','掉毛多'],
    care:{diet:'容易肥胖，控制份量',exercise:'短程散步，夏天待在冷氣房',groom:'清潔皺褶，每週梳毛',disease:'短吻症候群、眼疾、肥胖'}},
-  {id:'shiba',name:'柴犬',emoji:'🐕',species:'dog',size:'中',newbie:2,shed:5,clingy:2,bark:2,exercise:4,kids:3,elders:2,apartment:1,price:[25000,60000],disease:2,life:'12–15 年',
+  {id:'shiba',origin:'日本',weight:'約 8–11 公斤',intro:'日本最古老的犬種之一，原本在山區協助打獵。個性獨立、愛乾淨，有點像貓，不會一直黏著主人。牠很有主見，訓練需要耐心；換毛期掉毛量驚人，討厭被強迫抱或剪指甲也是常見的照顧難題。',name:'柴犬',emoji:'🐕',species:'dog',size:'中',newbie:2,shed:5,clingy:2,bark:2,exercise:4,kids:3,elders:2,apartment:1,price:[25000,60000],disease:2,life:'12–15 年',
    pros:['愛乾淨、獨立','健康狀況普遍不錯'],cons:['個性固執，訓練需耐心','換毛期掉毛非常多'],
    care:{diet:'中型犬飼料',exercise:'每天散步 2 次，各 40 分鐘以上',groom:'換毛期每天梳毛',disease:'過敏性皮膚炎、膝蓋骨脫臼'}},
-  {id:'corgi',name:'柯基犬',emoji:'🐕',species:'dog',size:'中',newbie:3,shed:5,clingy:4,bark:4,exercise:4,kids:3,elders:3,apartment:1,price:[25000,60000],disease:4,life:'12–14 年',
+  {id:'corgi',origin:'英國威爾斯',weight:'約 10–14 公斤',intro:'原本是趕牛的牧羊犬，短腿讓牠能靈活閃避牛蹄。聰明、活潑、愛互動，翹屁股和大耳朵讓牠非常受歡迎。牧羊犬的天性讓牠精力旺盛、容易吠叫，運動量其實不小；掉毛多，也要控制體重保護脊椎。',name:'柯基犬',emoji:'🐕',species:'dog',size:'中',newbie:3,shed:5,clingy:4,bark:4,exercise:4,kids:3,elders:3,apartment:1,price:[25000,60000],disease:4,life:'12–14 年',
    pros:['聰明活潑','親人好互動'],cons:['掉毛多','容易吠叫，公寓需注意噪音'],
    care:{diet:'易胖，控制體重保護脊椎',exercise:'每天 1 小時以上',groom:'每週梳毛 2–3 次',disease:'椎間盤疾病、髖關節問題'}},
-  {id:'border',name:'邊境牧羊犬',emoji:'🐕',species:'dog',size:'中',newbie:2,shed:3,clingy:4,bark:3,exercise:5,kids:4,elders:2,apartment:0,price:[20000,50000],disease:2,life:'12–15 年',
+  {id:'border',origin:'英國（英格蘭與蘇格蘭邊境）',weight:'約 14–20 公斤',intro:'常被評為最聰明的犬種，是專業的牧羊工作犬。學習能力極強，適合喜歡戶外運動、願意花時間訓練的主人。如果每天的運動和動腦需求不夠，很容易出現焦躁、破壞等行為問題，不建議忙碌的新手飼養。',name:'邊境牧羊犬',emoji:'🐕',species:'dog',size:'中',newbie:2,shed:3,clingy:4,bark:3,exercise:5,kids:4,elders:2,apartment:0,price:[20000,50000],disease:2,life:'12–15 年',
    pros:['極度聰明','適合愛運動的人'],cons:['運動與動腦需求極高','運動不足易出現行為問題'],
    care:{diet:'高活動量配方',exercise:'每天 2 小時以上＋益智遊戲',groom:'每週梳毛',disease:'髖關節發育不良、眼疾'}},
-  {id:'golden',name:'黃金獵犬',emoji:'🦮',species:'dog',size:'大',newbie:4,shed:5,clingy:4,bark:2,exercise:5,kids:5,elders:3,apartment:0,price:[20000,50000],disease:4,life:'10–12 年',
+  {id:'golden',origin:'英國蘇格蘭',weight:'約 25–34 公斤',intro:'原本是幫獵人叼回水鳥的獵犬，所以嘴巴柔軟、很愛叼東西。個性溫和穩定、對小孩很有耐心，常被選為導盲犬和治療犬。體型大、運動量大、掉毛多，需要足夠的空間和時間，也要注意關節與皮膚的保健。',name:'黃金獵犬',emoji:'🦮',species:'dog',size:'大',newbie:4,shed:5,clingy:4,bark:2,exercise:5,kids:5,elders:3,apartment:0,price:[20000,50000],disease:4,life:'10–12 年',
    pros:['個性溫和穩定','非常適合有小孩的家庭'],cons:['掉毛多','空間與運動需求大'],
    care:{diet:'大型犬飼料，注意關節保健',exercise:'每天 1–2 小時',groom:'每天梳毛',disease:'髖關節發育不良、腫瘤、皮膚病'}},
-  {id:'labrador',name:'拉布拉多',emoji:'🦮',species:'dog',size:'大',newbie:4,shed:4,clingy:4,bark:2,exercise:5,kids:5,elders:3,apartment:0,price:[15000,40000],disease:3,life:'10–12 年',
+  {id:'labrador',origin:'加拿大紐芬蘭（英國培育）',weight:'約 25–36 公斤',intro:'友善、好訓練，是全世界最受歡迎的犬種之一，也常擔任導盲犬和搜救犬。很適合有小孩的家庭。食慾很好，容易過胖；幼犬期精力旺盛又愛咬東西，需要耐心度過。',name:'拉布拉多',emoji:'🦮',species:'dog',size:'大',newbie:4,shed:4,clingy:4,bark:2,exercise:5,kids:5,elders:3,apartment:0,price:[15000,40000],disease:3,life:'10–12 年',
    pros:['友善好訓練','適合家庭'],cons:['食量大易胖','幼犬期精力旺盛'],
    care:{diet:'控制份量，避免肥胖',exercise:'每天 1–2 小時',groom:'每週梳毛',disease:'髖／肘關節發育不良、肥胖'}},
-  {id:'husky',name:'哈士奇',emoji:'🐺',species:'dog',size:'大',newbie:1,shed:5,clingy:3,bark:4,exercise:5,kids:4,elders:1,apartment:0,price:[15000,40000],disease:2,life:'12–14 年',
+  {id:'husky',origin:'俄羅斯西伯利亞',weight:'約 16–27 公斤',intro:'原本是在極地拉雪橇的工作犬，耐力驚人、外型像狼。個性友善外向，但精力旺盛、喜歡嚎叫，運動不足時容易拆家。厚重的雙層毛讓牠非常怕熱，台灣的氣候對牠來說負擔很大，飼養前需要審慎評估。',name:'哈士奇',emoji:'🐺',species:'dog',size:'大',newbie:1,shed:5,clingy:3,bark:4,exercise:5,kids:4,elders:1,apartment:0,price:[15000,40000],disease:2,life:'12–14 年',
    pros:['外型帥氣','個性友善'],cons:['極怕熱，不太適合台灣氣候','運動量極大、容易拆家、會嚎叫'],
    care:{diet:'高活動量配方',exercise:'每天 2 小時以上，避開高溫',groom:'換毛期每天梳毛',disease:'眼疾、中暑'}},
-  {id:'mixdog',name:'米克斯（台灣犬／混種犬）',emoji:'🐕‍🦺',species:'dog',size:'中',newbie:4,shed:3,clingy:3,bark:3,exercise:3,kids:4,elders:4,apartment:1,price:null,disease:2,life:'12–16 年',
+  {id:'mixdog',origin:'台灣',weight:'依個體差異大，常見約 10–20 公斤',intro:'台灣最常見的狗，也是收容所裡數量最多的。經過自然繁衍，通常比較能適應台灣氣候，整體健康狀況也不錯。每隻的個性、體型差異很大，建議領養前多去收容所互動幾次，或先以中途方式試養。',name:'米克斯（台灣犬／混種犬）',emoji:'🐕‍🦺',species:'dog',size:'中',newbie:4,shed:3,clingy:3,bark:3,exercise:3,kids:4,elders:4,apartment:1,price:null,disease:2,life:'12–16 年',
    pros:['適應台灣氣候','收容所數量最多，可直接領養'],cons:['個性差異大，需先與收容所了解','成犬後體型較難預估（幼犬）'],
    care:{diet:'依體型選擇飼料',exercise:'每天散步 2 次',groom:'每週梳毛',disease:'整體較健壯，依個體而定'}},
   // 貓（bark = 叫聲多寡）
-  {id:'mixcat',name:'米克斯貓（混種貓）',emoji:'🐈',species:'cat',size:'小',newbie:5,shed:3,clingy:3,bark:2,exercise:3,kids:4,elders:4,apartment:2,price:null,disease:2,life:'12–18 年',
+  {id:'mixcat',origin:'—',weight:'約 3–6 公斤',intro:'沒有特定品種的貓，台灣收容所與街頭最常見。基因多樣，通常比較健壯、好照顧。個性從黏人到獨立都有，成貓的個性已經定型，領養前和牠相處一段時間，比較容易找到合得來的貓。',name:'米克斯貓（混種貓）',emoji:'🐈',species:'cat',size:'小',newbie:5,shed:3,clingy:3,bark:2,exercise:3,kids:4,elders:4,apartment:2,price:null,disease:2,life:'12–18 年',
    pros:['健康強壯','收容所數量多'],cons:['個性差異大，可先試相處'],
    care:{diet:'貓飼料＋注意飲水量',exercise:'每天逗貓 15–30 分鐘',groom:'每週梳毛',disease:'泌尿道疾病、口炎'}},
-  {id:'bsh',name:'英國短毛貓',emoji:'🐱',species:'cat',size:'中',newbie:5,shed:3,clingy:2,bark:1,exercise:2,kids:4,elders:5,apartment:2,price:[20000,50000],disease:3,life:'12–17 年',
+  {id:'bsh',origin:'英國',weight:'約 4–8 公斤',intro:'圓臉、圓眼、厚實的短毛，看起來像一隻絨毛玩偶。個性沉穩安靜，可以自己待著，很適合上班族。不太喜歡被抱，喜歡在身邊陪伴；運動量低、容易發胖，要注意飲食控制。',name:'英國短毛貓',emoji:'🐱',species:'cat',size:'中',newbie:5,shed:3,clingy:2,bark:1,exercise:2,kids:4,elders:5,apartment:2,price:[20000,50000],disease:3,life:'12–17 年',
    pros:['安靜、穩定','可獨處，適合上班族'],cons:['不愛被抱','容易肥胖'],
    care:{diet:'控制熱量',exercise:'每天逗貓',groom:'每週梳毛 1–2 次',disease:'肥厚性心肌症、多囊腎'}},
-  {id:'ash',name:'美國短毛貓',emoji:'🐱',species:'cat',size:'中',newbie:5,shed:3,clingy:3,bark:2,exercise:3,kids:5,elders:4,apartment:2,price:[15000,40000],disease:2,life:'15–20 年',
+  {id:'ash',origin:'美國',weight:'約 3.5–7 公斤',intro:'早期隨移民到美洲，在農場和船上負責抓老鼠的工作貓。身體強健、適應力好，個性友善穩定，和小孩、其他寵物都容易相處。銀色虎斑是最經典的花色。整體好照顧，換毛期記得多梳毛。',name:'美國短毛貓',emoji:'🐱',species:'cat',size:'中',newbie:5,shed:3,clingy:3,bark:2,exercise:3,kids:5,elders:4,apartment:2,price:[15000,40000],disease:2,life:'15–20 年',
    pros:['健康、好照顧','適合家庭'],cons:['換毛期掉毛'],
    care:{diet:'一般貓飼料',exercise:'每天逗貓',groom:'每週梳毛',disease:'肥厚性心肌症'}},
-  {id:'ragdoll',name:'布偶貓',emoji:'🐱',species:'cat',size:'大',newbie:4,shed:4,clingy:5,bark:1,exercise:2,kids:5,elders:5,apartment:2,price:[30000,80000],disease:3,life:'12–17 年',
+  {id:'ragdoll',origin:'美國',weight:'約 4.5–9 公斤',intro:'名字來自被抱起來時會全身放鬆、像布娃娃一樣。個性非常溫順黏人，常會跟著主人走來走去，叫聲也小。屬於大型長毛貓，每天需要梳毛，價格也偏高。',name:'布偶貓',emoji:'🐱',species:'cat',size:'大',newbie:4,shed:4,clingy:5,bark:1,exercise:2,kids:5,elders:5,apartment:2,price:[30000,80000],disease:3,life:'12–17 年',
    pros:['非常黏人溫順','叫聲少'],cons:['長毛需每天梳理','價格高'],
    care:{diet:'大型貓配方',exercise:'溫和遊戲即可',groom:'每天梳毛',disease:'肥厚性心肌症'}},
-  {id:'siamese',name:'暹羅貓',emoji:'🐈',species:'cat',size:'中',newbie:3,shed:2,clingy:5,bark:5,exercise:4,kids:4,elders:3,apartment:1,price:[15000,40000],disease:3,life:'15–20 年',
+  {id:'siamese',origin:'泰國',weight:'約 3–5 公斤',intro:'古老的東方品種，修長的身材、藍眼睛和深色的臉、耳、腳是辨識特徵。非常聰明、愛撒嬌，也很「愛講話」，會用響亮的叫聲和主人溝通。需要大量陪伴，長時間獨處容易寂寞。',name:'暹羅貓',emoji:'🐈',species:'cat',size:'中',newbie:3,shed:2,clingy:5,bark:5,exercise:4,kids:4,elders:3,apartment:1,price:[15000,40000],disease:3,life:'15–20 年',
    pros:['掉毛少','非常親人、聰明'],cons:['叫聲大且多','需要大量陪伴'],
    care:{diet:'一般貓飼料',exercise:'每天互動遊戲 30 分鐘以上',groom:'每週梳毛',disease:'呼吸道、牙齒問題'}},
-  {id:'munchkin',name:'曼赤肯貓（短腿貓）',emoji:'🐱',species:'cat',size:'小',newbie:3,shed:3,clingy:4,bark:2,exercise:3,kids:4,elders:4,apartment:2,price:[25000,70000],disease:4,life:'12–15 年',
+  {id:'munchkin',origin:'美國',weight:'約 2.5–4 公斤',intro:'短腿是來自基因突變，外型可愛，在台灣很受歡迎。個性親人、好奇心強。短腿基因可能伴隨骨骼與關節問題，這也是這個品種較具爭議的地方，購買前建議先了解相關健康風險。',name:'曼赤肯貓（短腿貓）',emoji:'🐱',species:'cat',size:'小',newbie:3,shed:3,clingy:4,bark:2,exercise:3,kids:4,elders:4,apartment:2,price:[25000,70000],disease:4,life:'12–15 年',
    pros:['外型可愛','個性親人'],cons:['短腿基因可能伴隨骨骼問題'],
    care:{diet:'控制體重保護關節',exercise:'低處遊戲為主',groom:'每週梳毛',disease:'脊椎前凸、關節問題'}},
-  {id:'persian',name:'波斯貓',emoji:'🐱',species:'cat',size:'中',newbie:3,shed:5,clingy:3,bark:1,exercise:1,kids:3,elders:5,apartment:2,price:[20000,60000],disease:4,brachy:true,life:'12–17 年',
+  {id:'persian',origin:'伊朗（古波斯）',weight:'約 3–6 公斤',intro:'最知名的長毛貓之一，扁臉、長毛，氣質高雅。個性安靜溫和、運動需求低，喜歡待在家裡。每天都要梳毛、清潔眼睛；屬於短鼻品種，怕熱也容易有呼吸道和淚痕問題。',name:'波斯貓',emoji:'🐱',species:'cat',size:'中',newbie:3,shed:5,clingy:3,bark:1,exercise:1,kids:3,elders:5,apartment:2,price:[20000,60000],disease:4,brachy:true,life:'12–17 年',
    pros:['非常安靜','運動需求低'],cons:['長毛每天梳理','短鼻怕熱，淚痕多'],
    care:{diet:'長毛貓配方（化毛）',exercise:'溫和遊戲',groom:'每天梳毛、清潔眼睛',disease:'多囊腎、呼吸道、眼疾'}},
 ];
 
 const COSTS = {
   dog:{annual:14144, reg:'晶片 300 元＋登記費（已絕育 500／未絕育 1,000 元）'},
-  cat:{annual:13026, reg:'晶片 300 元＋登記費（貓的登記規定待確認）'},
+  cat:{annual:13026, reg:'晶片 300 元＋登記費（已絕育 500／未絕育 1,000 元）'},
 };
 const SIZE_MULT = {'小':0.9,'中':1.0,'大':1.4};
 
@@ -414,28 +589,36 @@ function envAdjust(b){
 }
 
 function render(){
+  // 分類（全部／狗／貓）＝ species 條件
+  const sp=conds.find(c=>CONDS[c].group==='species')||'all';
+  const cnt={all:BREEDS.length,dog:BREEDS.filter(b=>b.species==='dog').length,cat:BREEDS.filter(b=>b.species==='cat').length};
+  $('#speciesTabs').innerHTML=[['all','🐾 全部品種'],['dog','🐶 狗'],['cat','🐱 貓']]
+    .map(([k,t])=>`<button data-sp="${k}" class="${sp===k?'on':''}">${t}<span class="n">${cnt[k]}</span></button>`).join('');
   // chips
   $('#conds').innerHTML = conds.map(c=>`<button class="chip" data-rm="${c}">${CONDS[c].label} ✕</button>`).join('');
   $('#legal').innerHTML = banned
     ? `<div class="notice bad">⚠ <b>比特犬在台灣全面禁止飼養</b>，本站不收錄。另有日本土佐犬、紐波利頓犬、阿根廷杜告犬、巴西菲勒犬、獒犬等「危險犬種」有法規限制、不適合新手。<button class="btn sm ghost" id="unban">知道了</button></div>` : '';
   $('#envApplied').innerHTML = env ? `<div class="notice good">📍 已套用環境評估（${esc(env.label)}），分數已依周邊環境調整。</div>` : '';
 
-  const rows = BREEDS.map(b=>{
-    const hit=conds.filter(c=>CONDS[c].test(b)), miss=conds.filter(c=>!CONDS[c].test(b));
+  // 分類是篩選；其餘條件才計分
+  const oc=conds.filter(c=>CONDS[c].group!=='species');
+  const spLabel={all:'全部品種',dog:'狗',cat:'貓'}[sp];
+  const rows = BREEDS.filter(b=>sp==='all'||b.species===sp).map(b=>{
+    const hit=oc.filter(c=>CONDS[c].test(b)), miss=oc.filter(c=>!CONDS[c].test(b));
     const adj=envAdjust(b);
     return {b,hit,miss,adj,score:hit.length*10+adj.delta*3+b.newbie*0.1};
   }).sort((x,y)=>y.score-x.score);
 
   let list, head;
-  if(!conds.length){
-    list=rows; head=`<b>全部品種</b><span class="muted small">（${rows.length} 種，示意資料）</span>`;
+  if(!oc.length){
+    list=rows; head=`<b>${spLabel}</b><span class="muted small">（${rows.length} 種，示意資料）</span>`;
   }else{
     const full=rows.filter(r=>!r.miss.length);
-    if(full.length){ list=full; head=`<b>符合全部條件：${full.length} 種</b>`; }
+    if(full.length){ list=full; head=`<b>${sp==='all'?'':spLabel+'・'}符合全部條件：${full.length} 種</b>`; }
     else{
       const best=Math.max(...rows.map(r=>r.hit.length));
       list=rows.filter(r=>r.hit.length===best && best>0).slice(0,6);
-      head=`<b>沒有完全符合的品種，以下為最接近的結果</b><span class="muted small">（符合 ${best}/${conds.length} 個條件）</span>`;
+      head=`<b>沒有完全符合的品種，以下為最接近的結果</b><span class="muted small">（符合 ${best}/${oc.length} 個條件）</span>`;
     }
   }
   $('#resultHead').innerHTML=head;
@@ -443,8 +626,9 @@ function render(){
     <div class="breed" data-id="${b.id}">
       <div class="top"><span class="emoji">${b.emoji}</span>
         <div><div class="name">${esc(b.name)}</div><div class="small muted">${b.species==='dog'?'狗':'貓'}・${b.size}型・${b.price?money(b.price[0])+' 起':'以領養為主'}</div></div>
-        ${conds.length?`<span class="score ${miss.length?'partial':''}">${hit.length}/${conds.length}</span>`:''}
+        ${oc.length?`<span class="score ${miss.length?'partial':''}">${hit.length}/${oc.length}</span>`:''}
       </div>
+      <div class="intro">${esc(b.intro)}</div>
       <div class="tags">${breedTags(b)}</div>
       ${miss.length?`<div class="miss">不符合：${miss.map(m=>CONDS[m].label).join('、')}</div>`:''}
       ${adj.notes.length?`<div class="small" style="margin-top:6px">${adj.notes.map(n=>`<div><span class="delta ${n.delta>0?'p':n.delta<0?'m':'z'}">${n.delta>0?'+1':n.delta<0?'−1':'提醒'}</span> ${esc(n.msg)}</div>`).join('')}</div>`:''}
@@ -473,19 +657,28 @@ function similar(b){
     Math.abs(x.exercise-b.exercise)+Math.abs(x.clingy-b.clingy)+(x.size===b.size?0:2)<=4).slice(0,3);
 }
 function bar(label,v){return `<div class="bar"><span>${label}</span><div class="track"><div class="fill" style="width:${v*20}%"></div></div><span>${v}/5</span></div>`}
+let curBreed=BREEDS[0].id;
 function openBreed(id){
-  const b=BREEDS.find(x=>x.id===id), c=COSTS[b.species];
+  curBreed=id;
+  renderBreed();
+  showTab('breed');
+  window.scrollTo(0,0);
+}
+function renderBreed(){
+  const b=BREEDS.find(x=>x.id===curBreed), c=COSTS[b.species];
   const annual=c.annual*SIZE_MULT[b.size], sc=shelterCount(b), sim=sc?[]:similar(b), adj=envAdjust(b);
   const sp=b.species==='dog'?'犬':'貓';
-  $('#modalBox').innerHTML=`
-    <button class="close" id="mclose">×</button>
+  $('#breedBox').innerHTML=`
     <div class="row"><span class="emoji" style="font-size:44px">${b.emoji}</span><div><h2 style="margin:0">${esc(b.name)}</h2>
       <div class="muted small">${b.species==='dog'?'狗':'貓'}・${b.size}型・壽命約 ${b.life}</div></div></div>
+    <h3>品種介紹</h3>
+    <div class="facts"><span><b>原產地</b>${esc(b.origin)}</span><span><b>成${sp}體重</b>${esc(b.weight)}</span><span><b>壽命</b>${esc(b.life)}</span></div>
+    <p style="margin:4px 0 8px">${esc(b.intro)}</p>
     ${b.brachy?'<div class="notice warn">🌡 短鼻品種：台灣夏季中暑風險較高，需全天候注意室溫。</div>':''}
     ${b.newbie<=2?'<div class="notice warn">此品種照顧難度較高，不建議第一次養寵物的人。</div>':''}
     ${adj.notes.length?`<div class="notice info"><b>📍 依你的環境：</b>${adj.notes.map(n=>esc(n.msg)).join('；')}</div>`:''}
     <div class="two">
-      <div><h3>特徵</h3>
+      <div><h3>特徵評分</h3>
         ${bar('新手友善',b.newbie)}${bar('黏人程度',b.clingy)}${bar('掉毛程度',b.shed)}${bar(b.species==='dog'?'吠叫程度':'叫聲多寡',b.bark)}${bar('運動量',b.exercise)}${bar('適合小孩',b.kids)}${bar('適合長輩',b.elders)}
       </div>
       <div><h3>優點</h3><ul class="pc">${b.pros.map(p=>`<li>${esc(p)}</li>`).join('')}</ul>
@@ -514,7 +707,11 @@ function openBreed(id){
     </table></div>
     ${!sc?`<div class="notice info">收容所目前沒有此品種。體型、個性相近的收容動物：${sim.length?sim.map(s=>`<button class="chip plain" data-open="${s.id}">${esc(s.name)}（${shelterCount(s)} 隻）</button>`).join(' '):'米克斯（混種）'}</div>`:''}
     <p class="small muted" style="margin-top:14px">本站不參與交易；內容僅供參考，不取代獸醫或收容所評估。品種資料來源：國際犬／貓種協會公開資料（改寫）、農業部飼養照護指南（測試版尚未查證）。</p>`;
-  $('#modal').classList.add('on');
+}
+function showTab(name){
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id==='tab-'+name));
+  if(name==='breed') renderBreed();
 }
 
 /* ===================== 環境評估 ===================== */
@@ -525,16 +722,97 @@ const ENV_FACTORS = [
   {k:'er',label:'5 km 內有 24 小時急診'},
 ];
 const SCENARIOS = [
-  {label:'情境 A：近大型公園的住宅區',v:{park:1,school:0,vet:1,er:1}},
-  {label:'情境 B：學校旁的密集社區',v:{park:0,school:1,vet:1,er:1}},
-  {label:'情境 C：山邊住宅（綠地多、醫療遠）',v:{park:1,school:0,vet:0,er:0}},
-  {label:'情境 D：市中心商辦區',v:{park:0,school:0,vet:1,er:1}},
+  {label:'情境 A：近大型公園的住宅區',pos:[285,365]},
+  {label:'情境 B：學校旁的密集社區',pos:[655,435]},
+  {label:'情境 C：山邊住宅（綠地多、醫療遠）',pos:[960,40]},
+  {label:'情境 D：市中心商辦區',pos:[500,330]},
 ];
+// 示意地圖：虛構街區，座標單位 1 = 10 公尺（地圖約 10 km × 6 km）
+const MAP_W=1000, MAP_H=600, M_PER_UNIT=10;
+const POIS = [
+  {type:'park',name:'森林公園（示意）',pos:[250,380],area:[200,340,100,80]},
+  {type:'park',name:'狗運動公園（示意）',pos:[520,150],area:[495,130,50,40]},
+  {type:'park',name:'河濱公園（示意）',pos:[120,520],area:[70,500,110,40]},
+  {type:'park',name:'山區步道綠地（示意）',pos:[930,60],area:[880,20,100,80]},
+  {type:'school',name:'國小（示意）',pos:[645,410]},
+  {type:'school',name:'幼兒園（示意）',pos:[360,200]},
+  {type:'vet',name:'動物醫院 A（示意）',pos:[300,420]},
+  {type:'vet',name:'動物醫院 B（示意）',pos:[720,380]},
+  {type:'vet',name:'動物醫院 C（示意）',pos:[540,300]},
+  {type:'vet',name:'動物醫院 D（示意）',pos:[180,300]},
+  {type:'er',name:'24 小時動物醫院 甲（示意）',pos:[340,320]},
+  {type:'er',name:'24 小時動物醫院 乙（示意）',pos:[420,260]},
+];
+const POI_STYLE={park:{c:'#2f8a5b',t:'公園'},school:{c:'#b7791f',t:'學校'},vet:{c:'#3b6fd9',t:'動物醫院'},er:{c:'#c0392b',t:'24h 急診'}};
+const RANGE={park:1000,school:300,vet:1000,er:5000}; // 與規則表一致（公尺）
+function distM(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1])*M_PER_UNIT}
+function factorsAt(pos){
+  const v={};
+  for(const k of Object.keys(RANGE)) v[k]=POIS.some(p=>p.type===k&&distM(pos,p.pos)<=RANGE[k])?1:0;
+  if(!v.vet && POIS.some(p=>p.type==='er'&&distM(pos,p.pos)<=RANGE.vet)) v.vet=1; // 24h 急診也算動物醫院
+  return v;
+}
+let home=null;
+function fmtD(m){return m<1000?Math.round(m)+' m':(m/1000).toFixed(1)+' km'}
+function renderNearby(){
+  if(!home){$('#nearby').innerHTML='<div class="muted">尚未選擇位置：點地圖或選擇情境。</div>';return}
+  $('#nearby').innerHTML=Object.keys(RANGE).map(k=>{
+    const near=POIS.filter(p=>p.type===k).map(p=>({p,d:distM(home,p.pos)})).sort((a,b)=>a.d-b.d)[0];
+    const ok=near&&near.d<=RANGE[k];
+    return `<div><b>${POI_STYLE[k].t}</b>（${fmtD(RANGE[k])} 內）：${ok?'✔ ':'✘ '}${near?`最近 ${esc(near.p.name)}・${fmtD(near.d)}`:'無'}</div>`;
+  }).join('');
+}
+function setHome(pos,label){
+  home=pos; envDraft=factorsAt(pos); envLabel=label;
+  renderEnvInputs(); renderNearby(); drawHome();
+}
+function drawHome(){
+  const g=document.getElementById('homeLayer'); if(!g||!home) return;
+  const [x,y]=home, r300=300/M_PER_UNIT, r1k=1000/M_PER_UNIT;
+  const hit=POIS.filter(p=>distM(home,p.pos)<=RANGE[p.type]);
+  g.innerHTML=`
+    ${hit.map(p=>`<line x1="${x}" y1="${y}" x2="${p.pos[0]}" y2="${p.pos[1]}" stroke="${POI_STYLE[p.type].c}" stroke-width="1.5" stroke-dasharray="3 3" opacity=".8"/>`).join('')}
+    <circle cx="${x}" cy="${y}" r="${r1k}" fill="none" stroke="#d9733b" stroke-width="1.5" stroke-dasharray="8 6"/>
+    <circle cx="${x}" cy="${y}" r="${r300}" fill="#d9733b" fill-opacity=".10" stroke="#d9733b" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <circle cx="${x}" cy="${y}" r="9" fill="#d9733b" stroke="#fff" stroke-width="3"/>
+    <text x="${x}" y="${y+30}" text-anchor="middle" font-size="14" font-weight="700" fill="#2b2622" stroke="#fff" stroke-width="4" paint-order="stroke">🏠 你的位置</text>`;
+}
+function initMap(){
+  const roads=[];
+  for(let x=60;x<MAP_W;x+=110) roads.push(`<line x1="${x}" y1="0" x2="${x+20}" y2="${MAP_H}" stroke="#fff" stroke-width="${x%330===60?9:4}"/>`);
+  for(let y=50;y<MAP_H;y+=95) roads.push(`<line x1="0" y1="${y}" x2="${MAP_W}" y2="${y-15}" stroke="#fff" stroke-width="${y%285===50?9:4}"/>`);
+  const parks=POIS.filter(p=>p.area).map(p=>{const [ax,ay,w,h]=p.area;return `<rect x="${ax}" y="${ay}" width="${w}" height="${h}" rx="10" fill="#bfe0c4" stroke="#8cc79a"/>`}).join('');
+  const icon={park:'🌳',school:'🏫',vet:'🏥',er:'🚑'};
+  const pois=POIS.map(p=>`<g><title>${POI_STYLE[p.type].t}：${esc(p.name)}</title>
+    <circle cx="${p.pos[0]}" cy="${p.pos[1]}" r="11" fill="${POI_STYLE[p.type].c}" stroke="#fff" stroke-width="2"/>
+    <text x="${p.pos[0]}" y="${p.pos[1]+5}" text-anchor="middle" font-size="12">${icon[p.type]}</text>
+    <text x="${p.pos[0]}" y="${p.pos[1]+(p.type==='school'?-17:26)}" text-anchor="middle" font-size="11" fill="#4a423b" stroke="#fff" stroke-width="3" paint-order="stroke">${esc(p.name.replace('（示意）',''))}</text></g>`).join('');
+  $('#map').innerHTML=`<svg id="mapSvg" viewBox="0 0 ${MAP_W} ${MAP_H}" role="img" aria-label="示意地圖">
+    <rect width="${MAP_W}" height="${MAP_H}" fill="#eef1e6"/>
+    <path d="M820,0 Q900,90 1000,140 L1000,0 Z" fill="#d6e6cc"/>
+    <text x="960" y="128" text-anchor="end" font-size="13" fill="#6b8f5e">山區</text>
+    ${roads.join('')}
+    <path d="M0,470 C160,440 260,560 420,545 S700,470 820,600" fill="none" stroke="#a9cbe6" stroke-width="26" stroke-linecap="round"/>
+    <text x="440" y="580" font-size="13" fill="#5c87ad">河川（示意）</text>
+    ${parks}${pois}
+    <g id="homeLayer"></g>
+    <g transform="translate(24,24)"><rect x="-8" y="-16" width="132" height="34" rx="6" fill="#fff" opacity=".85"/>
+      <line x1="0" y1="6" x2="100" y2="6" stroke="#2b2622" stroke-width="3"/><line x1="0" y1="0" x2="0" y2="12" stroke="#2b2622" stroke-width="2"/><line x1="100" y1="0" x2="100" y2="12" stroke="#2b2622" stroke-width="2"/>
+      <text x="50" y="-2" text-anchor="middle" font-size="12" fill="#2b2622">1 km</text></g>
+    <text x="${MAP_W-10}" y="${MAP_H-10}" text-anchor="end" font-size="12" fill="#7a7068">示意地圖・非真實位置・點擊選擇你的住處</text>
+  </svg>`;
+  const svg=$('#mapSvg');
+  svg.addEventListener('click',e=>{
+    const pt=svg.createSVGPoint(); pt.x=e.clientX; pt.y=e.clientY;
+    const q=pt.matrixTransform(svg.getScreenCTM().inverse());
+    setHome([Math.round(q.x),Math.round(q.y)],'地圖選點');
+  });
+}
 // 規則表：when(env) 環境條件、target(b) 影響品種、delta 加減分（0=只提醒）
 const ENV_RULES = [
   {id:'R1',cond:'附近有狗運動公園或大型公園',range:'1 km',effect:'運動量大的品種 +1',msg:'附近有適合跑跳的空間',when:e=>e.park,target:b=>b.exercise>=4,delta:1},
   {id:'R2',cond:'附近沒有大型綠地',range:'1 km',effect:'運動量大的品種 −1',msg:'需要每天另外安排運動',when:e=>!e.park,target:b=>b.exercise>=4,delta:-1},
-  {id:'R3',cond:'附近有國小、幼兒園',range:'300 m',effect:'吠叫多的品種 −1；危險犬種提醒',msg:'附近孩童多，外出需特別注意管理',when:e=>e.school,target:b=>b.bark>=4,delta:-1},
+  {id:'R3',cond:'附近有國小、幼兒園',range:'300 m',effect:'吠叫多的品種 −1；攻擊性高或危險犬種提醒',msg:'附近孩童多，外出需特別注意管理',when:e=>e.school,target:b=>b.bark>=4,delta:-1},
   {id:'R4',cond:'附近沒有動物醫院',range:'1 km',effect:'好發疾病多的品種提醒',msg:'就醫較不方便',when:e=>!e.vet,target:b=>b.disease>=4,delta:0},
   {id:'R5',cond:'附近沒有 24 小時急診',range:'5 km',effect:'一般提醒',msg:'夜間急診可能需要較遠的車程',when:e=>!e.er,target:()=>true,delta:0},
   {id:'R6',cond:'住宅類型：公寓（使用者自填）',range:'—',effect:'吠叫多、大型犬 −1',msg:'公寓需注意噪音與空間',when:e=>e.housing==='apartment',target:b=>b.bark>=4||(b.species==='dog'&&b.size==='大'),delta:-1},
@@ -570,7 +848,7 @@ const ALIASES={poodle:['貴賓','泰迪'],maltese:['馬爾濟斯'],shihtzu:['西
 const TOPICS=[
   {k:'shed',re:/掉毛|過敏|毛/},{k:'apartment',re:/公寓|套房|大樓|空間/},{k:'bark',re:/吠|叫|吵/},
   {k:'exercise',re:/運動|散步|遛/},{k:'cost',re:/錢|費用|價格|多少|貴|開銷/},{k:'disease',re:/疾病|健康|好發/},
-  {k:'kids',re:/小孩|小朋友|孩子/},{k:'newbie',re:/新手|第一次|好養|難養/},{k:'groom',re:/美容|梳|洗澡/},{k:'life',re:/壽命|活多久/},
+  {k:'intro',re:/介紹|是什麼|什麼樣|個性|特色|來源|原產/},{k:'kids',re:/小孩|小朋友|孩子/},{k:'newbie',re:/新手|第一次|好養|難養/},{k:'groom',re:/美容|梳|洗澡/},{k:'life',re:/壽命|活多久/},
 ];
 const lvl=v=>['','很低','低','中等','高','很高'][v];
 const SRC='來源：本站品種資料庫（測試版示意資料）';
@@ -593,6 +871,7 @@ function answer(q){
     newbie:`${n}的新手友善程度為 ${b.newbie}/5。${b.newbie>=4?'適合第一次養的人。':'照顧難度較高，建議有經驗者。'}主要缺點：${b.cons.join('；')}。`,
     groom:`${n}的美容需求：${b.care.groom}。`,
     life:`${n}的平均壽命約 ${b.life}。`,
+    intro:`${n}（原產地：${b.origin}；成年體重${b.weight}）：${b.intro}`,
   };
   const text=t?map[t.k]:`${n}：${b.pros.join('、')}；需注意：${b.cons.join('、')}。你可以再問掉毛、吠叫、運動量、費用或常見疾病。`;
   return {text,src:SRC+`〈${n}〉`+(t&&(t.k==='disease'||t.k==='exercise')?'；農業部飼養照護指南':'')};
@@ -658,27 +937,28 @@ const TODO=[
 /* ===================== 事件 ===================== */
 const EX=['我是新手，住小套房','想養小型犬','不要太吵','家裡有小孩','我對毛過敏，想養貓','喜歡爬山','比特犬可以嗎'];
 $('#examples').insertAdjacentHTML('beforeend',EX.map(e=>`<button class="chip plain" data-ex="${esc(e)}">${esc(e)}</button>`).join(''));
-const AEX=['柯基適合住公寓嗎？','布偶貓會掉毛嗎？','哈士奇每年要花多少錢？','法鬥常見疾病','今天天氣如何？','我的狗一直拉肚子'];
+const AEX=['介紹一下柴犬','柯基適合住公寓嗎？','布偶貓會掉毛嗎？','哈士奇每年要花多少錢？','法鬥常見疾病','今天天氣如何？','我的狗一直拉肚子'];
 $('#askExamples').insertAdjacentHTML('beforeend',AEX.map(e=>`<button class="chip plain" data-ask="${esc(e)}">${esc(e)}</button>`).join(''));
 
 document.addEventListener('click',e=>{
-  const el=e.target.closest('[data-tab],[data-rm],[data-ex],[data-ask],[data-sc],[data-open],.breed,#unban,#mclose');
-  if(!el) { if(e.target.id==='modal') $('#modal').classList.remove('on'); return; }
-  if(el.dataset.tab){
-    document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b===el));
-    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.id==='tab-'+el.dataset.tab));
+  const el=e.target.closest('[data-sp],[data-tab],[data-rm],[data-ex],[data-ask],[data-sc],[data-open],.breed,#unban');
+  if(!el) return;
+  if(el.dataset.sp){
+    conds=conds.filter(c=>CONDS[c].group!=='species');
+    if(el.dataset.sp!=='all') conds.unshift(el.dataset.sp);
+    render();
   }
+  else if(el.dataset.tab){showTab(el.dataset.tab)}
   else if(el.dataset.rm){conds=conds.filter(c=>c!==el.dataset.rm);render()}
   else if(el.dataset.ex){$('#q').value=el.dataset.ex;submit()}
   else if(el.dataset.ask){ask(el.dataset.ask)}
-  else if(el.dataset.sc){const s=SCENARIOS[+el.dataset.sc];envDraft={...s.v};envLabel=s.label;renderEnvInputs()}
+  else if(el.dataset.sc){const s=SCENARIOS[+el.dataset.sc];setHome(s.pos,s.label)}
   else if(el.dataset.open){openBreed(el.dataset.open)}
   else if(el.id==='unban'){banned=false;render()}
-  else if(el.id==='mclose'){$('#modal').classList.remove('on')}
   else if(el.classList.contains('breed')){openBreed(el.dataset.id)}
 });
 document.addEventListener('change',e=>{if(e.target.dataset.f){envDraft[e.target.dataset.f]=e.target.checked?1:0;envLabel='自訂'}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#modal').classList.remove('on')});
+renderBreed();
 $('#qbtn').onclick=submit; $('#q').onkeydown=e=>{if(e.key==='Enter')submit()};
 $('#clear').onclick=()=>{conds=[];banned=false;$('#parseInfo').textContent='';render()};
 $('#askBtn').onclick=()=>ask($('#ask').value); $('#ask').onkeydown=e=>{if(e.key==='Enter')ask($('#ask').value)};
@@ -687,7 +967,7 @@ $('#envReset').onclick=()=>{env=null;$('#envResult').style.display='none';render
 $('#evalRun').onclick=runEval;
 $('#todoTable').innerHTML='<tr><th>狀態</th><th>事項</th></tr>'+TODO.map(([d,t])=>`<tr><td>${d?'<span class="pass">✔ 已決定</span>':'<span class="muted">☐ 待決</span>'}</td><td>${t}</td></tr>`).join('');
 
-renderEnvInputs(); render();
+initMap(); setHome(SCENARIOS[0].pos,SCENARIOS[0].label); render();
 ask('柯基適合住公寓嗎？');
 </script>
 </body>
