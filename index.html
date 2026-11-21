@@ -378,7 +378,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
 // 分數 1–5；apartment: 2=適合 1=勉強 0=不適合；price: 新台幣購買價區間（示意）
 const BREEDS = [
   {id:'poodle',origin:'法國（一說德國）',weight:'約 2–7 公斤（玩具／迷你）',intro:'原本是協助獵人從水中叼回獵物的工作犬，蓬鬆捲毛的造型來自當年保暖關節的剪法。貴賓是公認聰明的犬種之一，學習指令快、喜歡和人互動，加上幾乎不掉毛，是台灣城市家庭最常見的小型犬之一。代價是毛會持續生長，需要定期美容，而且很依賴主人，長時間獨處容易焦慮。',name:'貴賓犬（玩具／迷你）',emoji:'🐩',species:'dog',size:'小',newbie:5,shed:1,clingy:5,bark:3,exercise:3,kids:4,elders:5,apartment:2,price:[15000,40000],disease:3,life:'12–15 年',
-   pros:['幾乎不掉毛，適合輕度過敏者','聰明好訓練'],cons:['需定期美容','容易分離焦慮'],
+   pros:['幾乎不掉毛，打掃較輕鬆','聰明好訓練'],cons:['需定期美容','容易分離焦慮'],
    care:{diet:'小型犬飼料，注意控制體重',exercise:'每天散步 2 次，各 20–30 分鐘',groom:'每 4–6 週美容一次',disease:'膝蓋骨脫臼、淚痕、牙周病'}},
   {id:'maltese',origin:'地中海馬爾他島',weight:'約 2–4 公斤',intro:'歷史悠久的伴侶犬，幾千年來就以陪伴人類為主要工作。一身純白長毛是最大特色，個性溫和親人、喜歡被抱，很適合想要安靜陪伴的長輩或小家庭。毛容易打結和產生淚痕，日常梳理和清潔是主要功課。',name:'馬爾濟斯',emoji:'🐶',species:'dog',size:'小',newbie:4,shed:1,clingy:5,bark:3,exercise:2,kids:3,elders:5,apartment:2,price:[15000,35000],disease:3,life:'12–15 年',
    pros:['掉毛少','個性溫和親人'],cons:['毛長需每天梳理','體型小，與幼童互動需注意'],
@@ -461,7 +461,9 @@ const CONDS = {
   medium:{label:'中型',group:'size',test:b=>b.size==='中'},
   large:{label:'大型',group:'size',test:b=>b.size==='大'},
   apartment:{label:'適合公寓',test:b=>b.apartment>=2},
-  lowShed:{label:'掉毛少',test:b=>b.shed<=2},
+  lowShed:{label:'掉毛少（好打掃）',test:b=>b.shed<=2},
+  allergy:{label:'家人過敏（需評估）',test:()=>true},
+  toddler:{label:'家有幼童',test:b=>b.kids>=4&&!(b.species==='dog'&&b.size==='大')&&!FRAGILE.includes(b.id)},
   quiet:{label:'安靜（吠叫／叫聲少）',test:b=>b.bark<=2},
   kids:{label:'適合有小孩家庭',test:b=>b.kids>=4},
   elders:{label:'適合有長輩家庭',test:b=>b.elders>=4},
@@ -472,6 +474,30 @@ const CONDS = {
   budget:{label:'取得費用低',test:b=>!b.price||b.price[0]<=15000},
 };
 // consume=true：比對後移除該段文字，避免被後面的規則重複比對（例如「不黏」不要再算成「黏」）
+// 骨架細、容易被幼童誤傷的品種（示意，待專家審核）
+const FRAGILE=['chihuahua','pomeranian'];
+/* ---------- 有數字的條件：每月預算、獨處時數、坪數 ---------- */
+const monthlyCost=b=>Math.round(COSTS[b.species].annual*SIZE_MULT[b.size]/12+(b.shed<=2&&b.species==='dog'?800:0)); // 示意：低掉毛犬種需定期美容
+const aloneH=b=>({5:4,4:6,3:8,2:10,1:10})[b.clingy]; // 示意：依黏人程度估算可獨處時數，待專家審核
+const CN_NUM={'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10};
+function cnNum(x){ if(/^\d/.test(x)) return +x.replace(/,/g,''); let n=0; for(const c of x){ if(c==='萬') n=(n||1)*10000; else if(c==='千') n=(n||1)*1000; else if(CN_NUM[c]) n+=CN_NUM[c]; } return n; }
+function parseNums(t){
+  const out={};
+  const m=t.match(/(?:每個?月|一個月|月)[^0-9一二兩三四五六七八九十]{0,6}([\d,]+\s*[萬千]?|[一二兩三四五六七八九十]+[萬千])/);
+  if(m){ let v=m[1].replace(/\s/g,''); let n=/[萬千]$/.test(v)&&/^\d/.test(v)?(+v.slice(0,-1))*(v.endsWith('萬')?10000:1000):cnNum(v); if(n>=500) out.budgetM=n; }
+  const back=t.match(/(\d{1,2})\s*(?:點|:\d\d)\s*(?:下班|回家|到家)/) || t.match(/(?:下班|回家|到家)[^0-9]{0,4}(\d{1,2})\s*點/);
+  if(back){ let h=+back[1]; const pre=t.slice(Math.max(0,back.index-3),back.index); if(h<12 && !/早上|上午/.test(pre)) h+=12; const go=t.match(/(\d{1,2})\s*點\s*(?:出門|上班)/); const g=go?+go[1]:8; if(h>g) out.alone=h-g; }
+  const ping=t.match(/(\d{1,3})\s*坪/); if(ping) out.ping=+ping[1];
+  return out;
+}
+function numConds(n){
+  const ids=[];
+  if(n.budgetM){ CONDS.budgetM={label:`每月預算 ${n.budgetM.toLocaleString()} 元`,group:'budgetM',test:b=>monthlyCost(b)<=n.budgetM}; ids.push('budgetM'); }
+  if(n.alone){ CONDS.alone={label:`每天獨處約 ${n.alone} 小時`,group:'alone',test:b=>aloneH(b)>=n.alone}; ids.push('alone'); }
+  if(n.ping){ CONDS.space={label:`居住約 ${n.ping} 坪`,group:'space',test:b=>b.species==='cat'||(n.ping<=15?b.size==='小':n.ping<=25?b.size!=='大':true)}; ids.push('space'); }
+  return ids;
+}
+let allergyLevel=null; // null｜ask｜unknown｜mild｜severe
 const RULES = [
   {re:/比特/,ids:['__banned']},
   {re:/小套房|小坪數/,ids:['apartment','small'],consume:true},
@@ -482,7 +508,9 @@ const RULES = [
   {re:/貓/,ids:['cat']},
   {re:/狗|犬/,ids:['dog']},
   {re:/公寓|套房|大樓|租屋/,ids:['apartment']},
-  {re:/不掉毛|掉毛少|少掉毛|過敏/,ids:['lowShed'],consume:true},
+  {re:/過敏/,ids:['allergy'],consume:true},
+  {re:/不掉毛|掉毛少|少掉毛/,ids:['lowShed'],consume:true},
+  {re:/幼童|嬰兒|寶寶|[1-5]\s*歲(?:的)?(?:小孩|孩子|兒子|女兒)/,ids:['toddler'],consume:true},
   {re:/安靜|不吵|怕吵|太吵|鄰居/,ids:['quiet'],consume:true},
   {re:/小孩|小朋友|孩子|兒童/,ids:['kids']},
   {re:/長輩|老人|爸媽|父母|阿公|阿嬤/,ids:['elders']},
@@ -516,6 +544,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const money=n=>'NT$ '+Math.round(n).toLocaleString('en-US');
 
 function addConds(ids){
+  if(ids.includes('allergy')&&!allergyLevel) allergyLevel='ask';
   for(const id of ids){
     if(id==='__banned'){banned=true;continue}
     const g=CONDS[id].group;
@@ -542,6 +571,7 @@ function understand(t){
   const medical=/症狀|生病|吐|拉肚子|腹瀉|發燒|診斷|吃藥|受傷/.test(t);
   // 純提問（例如「柯基適合住公寓嗎？」）不把問題中的詞當成自己的條件
   let ids=(breed&&isQ&&!self)||medical?[]:parse(t);
+  if(!((breed&&isQ&&!self)||medical)) ids=ids.concat(numConds(parseNums(t)));
   if(/比特/.test(t)&&!ids.includes('__banned')) ids.push('__banned');
   const question=(isQ&&(breed||medical||/比特/.test(t)))||medical||(isQ&&!ids.length&&!loc&&!outside);
   return {ids,breed,question,loc,outside};
@@ -582,8 +612,13 @@ function render(){
     .map(([k,t])=>`<button data-sp="${k}" class="${sp===k?'on':''}">${t}<span class="n">${cnt[k]}</span></button>`).join('');
   // chips
   $('#conds').innerHTML = conds.map(c=>`<button class="chip" data-rm="${c}">${CONDS[c].label} ✕</button>`).join('');
-  $('#legal').innerHTML = banned
-    ? `<div class="notice bad">⚠ <b>比特犬在台灣全面禁止飼養</b>，本站不收錄。另有日本土佐犬、紐波利頓犬、阿根廷杜告犬、巴西菲勒犬、獒犬等「危險犬種」有法規限制、不適合新手。<button class="btn sm ghost" id="unban">知道了</button></div>` : '';
+  const AL={ask:'家人對寵物過敏：<b>研究顯示沒有任何犬種能被證實是「低過敏」</b>（少掉毛的貴賓毛髮過敏原反而偏高），掉毛少只代表好打掃。請在下方回答過敏程度。',
+    unknown:'過敏程度不確定：建議先做<b>過敏原檢測</b>，並到收容所或朋友家實際接觸幾次再決定。',
+    mild:'輕微過敏：可以考慮，但沒有品種能保證不過敏。需加強清潔、使用空氣清淨機，並先實際接觸試試看。',
+    severe:'嚴重過敏：誠實建議<b>先不要養</b>，或請醫師評估後再決定。'};
+  const alHtml=allergyLevel?`<div class="notice ${allergyLevel==='severe'?'bad':'warn'}">🤧 ${AL[allergyLevel]}<div class="small muted" style="margin-top:4px">來源：Vredegoor et al., J Allergy Clin Immunol, 2012</div></div>`:'';
+  $('#legal').innerHTML = alHtml + (banned
+    ? `<div class="notice bad">⚠ <b>比特犬在台灣全面禁止飼養</b>，本站不收錄。另有日本土佐犬、紐波利頓犬、阿根廷杜告犬、巴西菲勒犬、獒犬等「危險犬種」有法規限制、不適合新手。<button class="btn sm ghost" id="unban">知道了</button></div>` : '');
 
   // 分類是篩選；其餘條件才計分
   const oc=conds.filter(c=>CONDS[c].group!=='species');
@@ -613,7 +648,7 @@ function render(){
   $('#results').innerHTML = list.map(({b,hit,miss,adj})=>`
     <div class="breed" data-id="${b.id}">
       <div class="top"><span class="emoji">${b.emoji}</span>
-        <div><div class="name">${esc(b.name)}</div><div class="small muted">${b.species==='dog'?'狗':'貓'}・${b.size}型・${b.price?money(b.price[0])+' 起':'以領養為主'}</div></div>
+        <div><div class="name">${esc(b.name)}</div><div class="small muted">${b.species==='dog'?'狗':'貓'}・${b.size}型・${b.price?money(b.price[0])+' 起':'以領養為主'}・每月約 ${money(monthlyCost(b))}</div></div>
         ${oc.length?`<span class="score ${miss.length?'partial':''}">${hit.length}/${oc.length}</span>`:''}
       </div>
       <div class="intro">${esc(b.intro)}</div>
@@ -643,6 +678,8 @@ const ADJUST={
   quiet:b=>'如果住處不怕吵，並願意做吠叫訓練，就可以考慮',
   newbie:b=>'如果先累積照顧經驗或參加訓練課程，再考慮會比較穩',
   independent:b=>'如果每天能有人在家陪伴較長時間，就可以考慮',
+  budgetM:b=>`如果每月預算能提高到約 ${money(monthlyCost(b))}，就可以考慮（另需突發醫療預備金）`,
+  alone:b=>`如果能把獨處縮短到約 ${aloneH(b)} 小時（例如安排寵物保姆或日托），就可以考慮`,
 };
 function ifCan(b,miss){
   const fixed=miss.filter(m=>!ADJUST[m]), adj=miss.filter(m=>ADJUST[m]);
@@ -655,7 +692,8 @@ function ifCan(b,miss){
 /* ---------- AI 建議追問：挑最能縮小範圍的問題 ---------- */
 const FOLLOW=[
   {id:'sp',q:'想養狗還是貓？',opts:[['dog','狗'],['cat','貓']]},
-  {id:'lowShed',q:'家裡有人對毛過敏嗎？'},
+  {id:'allergy',q:'家裡有人對寵物過敏嗎？'},
+  {id:'toddler',q:'家裡有幼童（約 5 歲以下）嗎？'},
   {id:'kids',q:'家裡有小孩嗎？'},
   {id:'elders',q:'家裡有長輩同住嗎？'},
   {id:'apartment',q:'住公寓或套房嗎？'},
@@ -669,18 +707,22 @@ function renderFollow(cands,sp){
   const box=$('#followCard');
   const oc=conds.filter(c=>CONDS[c].group!=='species');
   if(!conds.length && !env){box.style.display='none';return}
+  if(allergyLevel==='ask'&&cands.length<=3){box.style.display='block';box.innerHTML=`<h2>💬 AI 建議追問</h2><div class="row"><b>家人的過敏程度大概是？</b><button class="chip plain" data-al="unknown">不確定</button><button class="chip plain" data-al="mild">輕微</button><button class="chip plain" data-al="severe">嚴重</button></div>`;return}
   if(!cands.length){box.style.display='block';box.innerHTML='<h2>💬 AI 建議追問</h2><p class="small muted" style="margin:0">沒有完全符合的品種：可以移除部分條件，或參考卡片上「如果……就可以」的建議。</p>';return}
   if(cands.length<=3){box.style.display='block';box.innerHTML=`<h2>💬 AI 建議追問</h2><p class="small muted" style="margin:0">剩下 ${cands.length} 種，範圍已經夠小，不再追問。點品種卡片看詳細資料。</p>`;return}
   const scored=FOLLOW.filter(f=>!asked.has(f.id)).map(f=>{
     if(f.id==='sp'){ if(sp!=='all') return null; const d=cands.filter(b=>b.species==='dog').length; return {f,yes:d,score:Math.min(d,cands.length-d)} }
     if(conds.includes(f.id)) return null;
+    if(f.id==='allergy') return {f,yes:cands.length,score:cands.length/2}; // 過敏不篩品種，但影響重大，優先詢問
     const g=CONDS[f.id].group; if(g&&conds.some(c=>CONDS[c].group===g)) return null;
     const yes=cands.filter(b=>CONDS[f.id].test(b)).length;
     return {f,yes,score:Math.min(yes,cands.length-yes)};
   }).filter(x=>x&&x.score>0).sort((a,b)=>b.score-a.score).slice(0,3);
   if(!scored.length){box.style.display='block';box.innerHTML='<h2>💬 AI 建議追問</h2><p class="small muted" style="margin:0">剩下的品種在其他條件上差異不大，問不出差別，不再追問。</p>';return}
   box.style.display='block';
-  box.innerHTML=`<h2>💬 AI 建議追問</h2><p class="small muted" style="margin:-4px 0 8px">挑「最能縮小範圍」的問題：能把目前 ${cands.length} 種分得最平均的先問。也可以忽略，自己再輸入。</p>`+
+  const allergyQ=allergyLevel==='ask'?`<div class="row" style="margin:6px 0"><b>家人的過敏程度大概是？</b>
+      <button class="chip plain" data-al="unknown">不確定</button><button class="chip plain" data-al="mild">輕微</button><button class="chip plain" data-al="severe">嚴重</button></div>`:'';
+  box.innerHTML=`<h2>💬 AI 建議追問</h2>${allergyQ}<p class="small muted" style="margin:-4px 0 8px">挑「最能縮小範圍」的問題：能把目前 ${cands.length} 種分得最平均的先問。也可以忽略，自己再輸入。</p>`+
     scored.map(({f,yes})=>`<div class="row" style="margin:6px 0"><span>${f.q}</span>
       ${f.opts?f.opts.map(([v,l])=>`<button class="chip plain" data-fa="${f.id}" data-v="${v}">${l}</button>`).join(''):
         `<button class="chip plain" data-fa="${f.id}" data-v="y">是</button><button class="chip plain" data-fa="${f.id}" data-v="n">否</button>`}
@@ -885,9 +927,9 @@ function initMap(){
 }
 // 規則表：when(env) 環境條件、target(b) 影響品種、delta 加減分（0=只提醒）
 const ENV_RULES = [
-  {id:'R1',cond:'附近有狗運動公園或大型公園',range:'1 km',effect:'運動量大的品種 +1',msg:'附近有適合跑跳的空間',when:e=>e.park,target:b=>b.exercise>=4,delta:1},
+  {id:'R1',cond:'附近有狗運動公園或大型公園',range:'1 km',effect:'大型犬與運動量大的品種 +1',msg:'附近有適合跑跳的空間',when:e=>e.park,target:b=>b.exercise>=4||(b.species==='dog'&&b.size==='大'),delta:1},
   {id:'R2',cond:'附近沒有大型綠地',range:'1 km',effect:'運動量大的品種 −1',msg:'需要每天另外安排運動',when:e=>!e.park,target:b=>b.exercise>=4,delta:-1},
-  {id:'R3',cond:'附近有國小、幼兒園',range:'300 m',effect:'吠叫多的品種 −1；攻擊性高或危險犬種提醒',msg:'附近孩童多，外出需特別注意管理',when:e=>e.school,target:b=>b.bark>=4,delta:-1},
+  {id:'R3',cond:'附近有國小、幼兒園',range:'300 m',effect:'警戒心強、吠叫多的犬種 −1 並提醒；法規列管危險犬種提醒',msg:'附近孩童多：需加強社會化訓練與外出管理（個體差異大，非品種定論）',when:e=>e.school,target:b=>b.species==='dog'&&b.bark>=4,delta:-1},
   {id:'R4',cond:'附近沒有動物醫院',range:'1 km',effect:'好發疾病多的品種提醒',msg:'就醫較不方便',when:e=>!e.vet,target:b=>b.disease>=4,delta:0},
   {id:'R5',cond:'附近沒有 24 小時急診',range:'5 km',effect:'一般提醒',msg:'夜間急診可能需要較遠的車程',when:e=>!e.er,target:()=>true,delta:0},
   {id:'R6',cond:'住宅類型：公寓（由對話取得）',range:'—',effect:'吠叫多、大型犬 −1',msg:'公寓需注意噪音與空間',when:e=>e.housing==='apartment',target:b=>b.bark>=4||(b.species==='dog'&&b.size==='大'),delta:-1},
@@ -903,7 +945,7 @@ function renderEnvInputs(){
 /* ===================== 問答（模擬 RAG） ===================== */
 const ALIASES={poodle:['貴賓','泰迪'],maltese:['馬爾濟斯'],shihtzu:['西施'],pomeranian:['博美'],chihuahua:['吉娃娃'],dachshund:['臘腸'],frenchie:['法鬥','法國鬥牛'],pug:['巴哥'],shiba:['柴犬','柴柴'],corgi:['柯基'],border:['邊境','邊牧'],golden:['黃金'],labrador:['拉布拉多','拉拉'],husky:['哈士奇'],mixdog:['米克斯狗','台灣犬','土狗','混種犬'],mixcat:['米克斯貓','混種貓','米克斯'],bsh:['英短','英國短毛'],ash:['美短','美國短毛'],ragdoll:['布偶'],siamese:['暹羅'],munchkin:['曼赤肯','短腿貓'],persian:['波斯']};
 const TOPICS=[
-  {k:'shed',re:/掉毛|過敏|毛/},{k:'apartment',re:/公寓|套房|大樓|空間/},{k:'bark',re:/吠|叫|吵/},
+  {k:'shed',re:/掉毛|毛/},{k:'apartment',re:/公寓|套房|大樓|空間/},{k:'bark',re:/吠|叫|吵/},
   {k:'exercise',re:/運動|散步|遛/},{k:'cost',re:/錢|費用|價格|多少|貴|開銷/},{k:'disease',re:/疾病|健康|好發/},
   {k:'intro',re:/介紹|是什麼|什麼樣|個性|特色|來源|原產/},{k:'kids',re:/小孩|小朋友|孩子/},{k:'newbie',re:/新手|第一次|好養|難養/},{k:'groom',re:/美容|梳|洗澡/},{k:'life',re:/壽命|活多久/},
 ];
@@ -912,17 +954,18 @@ const SRC='來源：本站品種資料庫（測試版示意資料）';
 function answer(q){
   if(/比特/.test(q)) return {text:'比特犬在台灣全面禁止飼養，本站不收錄，也不建議以任何管道取得。如果你喜歡這類體型的狗，可以參考其他新手友善的中大型犬。',src:'來源：動物保護法（禁養犬種規定）'};
   if(/症狀|生病|吐|拉肚子|腹瀉|發燒|診斷|吃藥|受傷/.test(q)) return {text:'無法回答：本顧問不提供醫療診斷。若寵物出現身體不適，請盡快洽詢獸醫。',src:null};
+  if(/過敏/.test(q)) return {text:'研究顯示沒有證據支持任何犬種是「低過敏」：少掉毛的貴賓，毛髮中的過敏原反而偏高；家中養「低過敏」犬種與一般犬種的過敏原濃度也沒有明顯差異。掉毛少只代表比較好打掃。若家人過敏，建議先做過敏原檢測、實際接觸幾次，嚴重者請先諮詢醫師。',src:'來源：Vredegoor et al., J Allergy Clin Immunol, 2012；Nicholas et al., Am J Rhinol Allergy, 2011'};
   const ids=Object.keys(ALIASES).filter(id=>ALIASES[id].some(a=>q.includes(a)));
   const b=ids.length?BREEDS.find(x=>x.id===ids[0]):null;
   const t=TOPICS.find(t=>t.re.test(q));
   if(!b) return {text:'無法回答：我只能回答本站收錄品種的相關問題（例如「柯基會掉毛嗎？」）。其他問題建議洽詢獸醫或收容所。',src:null};
   const n=b.name, c=COSTS[b.species];
   const map={
-    shed:`${n}的掉毛程度為「${lvl(b.shed)}」（${b.shed}/5）。${b.shed>=4?'掉毛多，需要經常梳毛與打掃，對毛過敏的人要特別考慮。':b.shed<=2?'掉毛較少，相對適合輕度過敏者，但仍建議先實際接觸看看。':'需定期梳毛。'}美容：${b.care.groom}。`,
+    shed:`${n}的掉毛程度為「${lvl(b.shed)}」（${b.shed}/5）。${b.shed>=4?'掉毛多，需要經常梳毛與打掃。':b.shed<=2?'掉毛較少，打掃較輕鬆（但不代表不會引起過敏）。':'需定期梳毛。'}美容：${b.care.groom}。`,
     apartment:`${n}${b.apartment>=2?'適合住':b.apartment===1?'可以住，但不是最理想的':'不太適合住'}公寓。${b.bark>=4?'不過牠'+(b.species==='dog'?'吠叫':'叫聲')+'較多，需注意鄰居噪音。':''}${b.exercise>=4?'運動量大，住公寓需每天安排足夠的戶外運動。':''}`,
     bark:`${n}的${b.species==='dog'?'吠叫':'叫聲'}程度為「${lvl(b.bark)}」（${b.bark}/5）。`,
     exercise:`${n}的運動量為「${lvl(b.exercise)}」。建議：${b.care.exercise}。`,
-    cost:`${n}${b.price?`購買價約 ${money(b.price[0])}–${money(b.price[1])}（示意，待查價）`:'以領養為主'}；一次性費用：${c.reg}；每年開銷約 ${money(c.annual*SIZE_MULT[b.size])}（示意估算）。`,
+    cost:`${n}${b.price?`購買價約 ${money(b.price[0])}–${money(b.price[1])}（示意，待查價）`:'以領養為主'}；一次性費用：${c.reg}；每月約 ${money(monthlyCost(b))}（示意估算），另建議準備突發醫療預備金。`,
     disease:`${n}常見的健康問題：${b.care.disease}。這些資訊僅供參考，實際狀況請洽獸醫。`,
     kids:`${n}適合有小孩家庭的程度為 ${b.kids}/5。${b.kids<=2?'不建議與幼童同住，或需大人全程看顧。':''}`,
     newbie:`${n}的新手友善程度為 ${b.newbie}/5。${b.newbie>=4?'適合第一次養的人。':'照顧難度較高，建議有經驗者。'}主要缺點：${b.cons.join('；')}。`,
@@ -939,7 +982,7 @@ const TESTS=[
   {type:'標籤',q:'想養小型犬，不要太吵',expect:['small','dog','quiet']},
   {type:'標籤',q:'家裡有小孩跟長輩',expect:['kids','elders']},
   {type:'標籤',q:'上班族沒時間遛狗',expect:['lowExercise','dog']},
-  {type:'標籤',q:'我對毛過敏，想養貓',expect:['lowShed','cat']},
+  {type:'標籤',q:'我對毛過敏，想養貓',expect:['allergy','cat']},
   {type:'標籤',q:'喜歡爬山，想要大狗',expect:['active','large','dog']},
   {type:'標籤',q:'想要很黏人的貓',expect:['clingy','cat']},
   {type:'標籤',q:'希望牠可以獨處，不要太黏',expect:['independent']},
@@ -948,9 +991,12 @@ const TESTS=[
   {type:'顧問',q:'今天天氣如何？',must:/無法回答/,needSrc:false},
   {type:'顧問',q:'我的狗一直拉肚子怎麼辦',must:/無法回答.*獸醫/,needSrc:false},
   {type:'法規',q:'比特犬適合我嗎？',must:/禁止飼養/,legal:true},
+  {type:'過敏',q:'貴賓是低過敏犬種嗎？我有過敏',must:/沒有證據/,legal:true},
   {type:'理解',q:'我住大安區的公寓',check:u=>u.loc&&u.loc.label==='大安區'&&u.ids.includes('apartment')&&!u.question,exp:'地點：大安區＋條件：適合公寓'},
   {type:'理解',q:'柯基適合住公寓嗎？',check:u=>u.question&&u.breed&&u.breed.id==='corgi'&&!u.ids.length,exp:'問題（柯基），不加條件'},
   {type:'理解',q:'我住公寓，柯基可以嗎？',check:u=>u.question&&u.breed&&u.breed.id==='corgi'&&u.ids.includes('apartment'),exp:'問題（柯基）＋條件：適合公寓'},
+  {type:'理解',q:'每個月預算一萬，晚上7點下班，住15坪套房',check:u=>u.ids.includes('budgetM')&&u.ids.includes('alone')&&u.ids.includes('space')&&CONDS.budgetM.label.includes('10,000')&&CONDS.alone.label.includes('11'),exp:'每月預算 10,000＋獨處約 11 小時＋15 坪'},
+  {type:'理解',q:'早上8點出門晚上8點回家',check:u=>u.ids.includes('alone')&&CONDS.alone.label.includes('12'),exp:'每天獨處約 12 小時'},
   {type:'理解',q:'我住台中，想養貓',check:u=>u.outside&&!u.loc&&u.ids.includes('cat'),exp:'台北市以外＋條件：貓'},
 ];
 function runEval(){
@@ -981,7 +1027,7 @@ function runEval(){
   $('#kpis').innerHTML=`<div class="kpi">標籤正確率<b>${pct(tagOk,tagN)}</b><span class="small muted">${tagOk}/${tagN}</span></div>
     <div class="kpi">輸入理解正確率<b>${pct(undOk,undN)}</b><span class="small muted">${undOk}/${undN}</span></div>
     <div class="kpi">附來源比例<b>${pct(srcOk,srcN)}</b><span class="small muted">${srcOk}/${srcN}</span></div>
-    <div class="kpi">法規題正確率<b>${pct(legalOk,legalN)}</b><span class="small muted">${legalOk}/${legalN}</span></div>
+    <div class="kpi">法規與過敏題正確率<b>${pct(legalOk,legalN)}</b><span class="small muted">${legalOk}/${legalN}</span></div>
     <div class="kpi">整體通過<b>${pct(rows.filter(r=>r.pass).length,rows.length)}</b><span class="small muted">${rows.filter(r=>r.pass).length}/${rows.length}</span></div>`;
   $('#evalTable').innerHTML='<tr><th>類型</th><th>題目</th><th>標準答案</th><th>系統輸出</th><th>結果</th></tr>'+
     rows.map(r=>`<tr><td>${r.t.type}</td><td>${esc(r.t.q)}</td><td class="small">${esc(r.exp)}</td><td class="small">${esc(r.got)}</td><td class="${r.pass?'pass':'fail'}">${r.pass?'通過':'失敗'}</td></tr>`).join('');
@@ -997,13 +1043,14 @@ const TODO=[
 ];
 
 /* ===================== 事件 ===================== */
-const EX=['我是新手，住小套房','我住大安區的公寓，想養狗','柯基適合住公寓嗎？','我住公寓，柴犬可以嗎？','家裡有小孩，想養貓','上班族沒時間遛狗','比特犬可以嗎','我的狗一直拉肚子'];
+const EX=['我是新手，住小套房','每月預算一萬，晚上7點下班，住15坪套房','家裡有3歲小孩，媽媽輕微過敏','我住大安區的公寓，想養狗','柯基適合住公寓嗎？','我住公寓，柴犬可以嗎？','家裡有小孩，想養貓','上班族沒時間遛狗','比特犬可以嗎','我的狗一直拉肚子'];
 $('#examples').insertAdjacentHTML('beforeend',EX.map(e=>`<button class="chip plain" data-ex="${esc(e)}">${esc(e)}</button>`).join(''));
 
 document.addEventListener('click',e=>{
-  const el=e.target.closest('[data-sp],[data-tab],[data-rm],[data-ex],[data-askq],[data-fa],[data-open],.breed,#unban,#mapClose');
+  const el=e.target.closest('[data-al],[data-sp],[data-tab],[data-rm],[data-ex],[data-askq],[data-fa],[data-open],.breed,#unban,#mapClose');
   if(!el) return;
-  if(el.dataset.sp){
+  if(el.dataset.al){allergyLevel=el.dataset.al;render()}
+  else if(el.dataset.sp){
     conds=conds.filter(c=>CONDS[c].group!=='species');
     if(el.dataset.sp!=='all') conds.unshift(el.dataset.sp);
     render();
@@ -1026,7 +1073,7 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{if(e.target.dataset.f){envDraft[e.target.dataset.f]=e.target.checked?1:0;envLabel='自訂';render()}});
 renderBreed();
 $('#qbtn').onclick=submit; $('#q').onkeydown=e=>{if(e.key==='Enter')submit()};
-$('#clear').onclick=()=>{conds=[];banned=false;asked=new Set();lastAnswer=null;home=null;env=null;$('#parseInfo').textContent='';$('#outsideNote')&&$('#outsideNote').remove();render()};
+$('#clear').onclick=()=>{conds=[];banned=false;allergyLevel=null;asked=new Set();lastAnswer=null;home=null;env=null;$('#parseInfo').textContent='';$('#outsideNote')&&$('#outsideNote').remove();render()};
 
 $('#evalRun').onclick=runEval;
 $('#todoTable').innerHTML='<tr><th>狀態</th><th>事項</th></tr>'+TODO.map(([d,t])=>`<tr><td>${d?'<span class="pass">✔ 已決定</span>':'<span class="muted">☐ 待決</span>'}</td><td>${t}</td></tr>`).join('');
