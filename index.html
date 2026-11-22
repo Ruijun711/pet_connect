@@ -178,7 +178,8 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
         <li>各標籤的判斷標準：例如「新手友善」要幾分以上？「適合公寓」的依據來源？</li>
         <li>追問最多問幾題？剩幾個品種時停止？</li>
         <li>環境規則距離（300 m／1 km／5 km）與「大型公園」門檻，需請獸醫或老師審核。</li>
-        <li>第 5 週若落後：地圖卡片改為只顯示文字的周邊設施清單；「如果……就可以」改為只顯示不符合條件；問答限定熱門品種。</li>
+        <li>第 5 週若落後（PRD §8 縮減順序）：① 延伸 A 照片辨識 ② 延伸 A 移到第二階段 ③ 地圖卡片改為文字清單 ④「如果……就可以」改為只顯示不符合條件 ⑤ 問答限定熱門品種。所有 P0 不縮減。</li>
+        <li>「想養幼犬、成犬，或都可以」是否加入條件（討論紀錄 §10，討論中，尚未寫入 PRD）。</li>
       </ul>
     </div>
   </section>
@@ -205,6 +206,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
         <tr><th>比較項目</th><th>說明</th><th>通用 AI</th><th>本系統</th></tr>
         <tr><td>台灣在地資訊正確率</td><td>價格、登記費、禁養法規、收容所現況</td><td>待實驗</td><td>待實驗</td></tr>
         <tr><td>一般品種知識正確率</td><td>品種特徵、照顧方式</td><td>待實驗</td><td>待實驗</td></tr>
+        <tr><td>常見迷思</td><td>例如「低過敏犬種」：宣稱任何品種低過敏即判定失敗</td><td>待實驗</td><td>待實驗</td></tr>
         <tr><td>附來源比例</td><td>回答有標示來源的比例</td><td>待實驗</td><td>待實驗</td></tr>
         <tr><td>拒答正確率</td><td>診斷、無資料等不該回答的問題</td><td>待實驗</td><td>待實驗</td></tr>
         <tr><td>可行動資訊</td><td>能否提供收容所動物、合法業者名冊等連結</td><td>待實驗</td><td>待實驗</td></tr>
@@ -216,7 +218,7 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
       <b>🗣 討論點（品質評估）</b>
       <ul>
         <li>目標約 50 題：輸入理解、句子轉標籤、追問、問答、法規題、環境規則的比例怎麼分？誰負責出題？</li>
-        <li>及格門檻？（例如標籤正確率 ≥ 85%、附來源 100%、法規題 100%）</li>
+        <li>及格門檻：PRD 已定「附來源 100%」「法規題、過敏題 100%（任一失敗即未通過）」；其他指標（例如標籤正確率）的目標值待訂。</li>
         <li>對照實驗要比較哪幾個通用 AI 與版本？開放式回答由誰人工評分？</li>
         <li>易用性：找 5–8 人做使用者測試＋SUS 問卷。</li>
       </ul>
@@ -226,19 +228,21 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
   <!-- 待決 -->
   <section class="tab" id="tab-todo">
     <div class="card">
-      <h2>待決事項（brief 第 14 節）</h2>
+      <h2>待決事項（PRD v0.3 §10、PRD_quick §12）</h2>
+      <p class="small muted">「擋住 P0」＝不解決就無法驗收或簽核該 P0（分類已於 11/22 確認；不採用「未解決即降為 P1」的規則）。</p>
       <div class="tablewrap"><table id="todoTable"></table></div>
     </div>
     <div class="card">
       <h2>分工建議（6 人／8 週：2026/11/27 – 2027/1/21）</h2>
       <div class="tablewrap"><table>
         <tr><th>角色</th><th>人數</th><th>負責內容</th><th>對應測試版頁面</th></tr>
-        <tr><td>AI／後端</td><td>1–2（有程式背景）</td><td>寵物配對 AI（輸入判斷、追問、RAG）、AI 品質評估與對照實驗、後端架構（品種資料庫、收容所 API）</td><td>① ③</td></tr>
-        <tr><td>前端</td><td>2</td><td>輸入框與結果頁（品種卡片、條件標籤、追問、回答、地圖卡片）、品種詳細頁</td><td>① ②</td></tr>
+        <tr><td>AI／後端</td><td>1–2（有程式背景）</td><td>寵物配對 AI（輸入判斷、追問、RAG）、AI 品質評估與對照實驗、後端架構（品種資料庫、收容所 API）、延伸 A 每日比對與寄信、照片辨識</td><td>① ③</td></tr>
+        <tr><td>前端</td><td>2</td><td>輸入框與結果頁（品種卡片、條件標籤、追問、回答、地圖卡片）、品種詳細頁（含一生拉桿）、延伸 A 訂閱頁、延伸 B 考慮清單與 PDF 版面</td><td>① ②</td></tr>
         <tr><td>環境評估</td><td>1</td><td>地圖與周邊設施資料、環境規則表、合法業者名冊整理</td><td>① 地圖卡片</td></tr>
-        <tr><td>資料</td><td>1</td><td>品種資料、標籤、價格、照顧內容、測試題目</td><td>資料、③ 題目</td></tr>
+        <tr><td>資料</td><td>1</td><td>品種資料、標籤、價格、照顧內容、測試題目、照片辨識用的標記照片</td><td>資料、③ 題目</td></tr>
       </table></div>
-      <p class="small muted">第 5 週檢查進度，落後時依序縮減：(1) 地圖卡片改為文字清單 (2)「如果……就可以」改為只顯示不符合條件 (3) 問答限定熱門品種。推薦與追加條件、品種詳細頁、品質評估（含對照實驗）、問答的護欄與附來源不縮減。</p>
+      <p class="small muted">一生拉桿的資料（討論紀錄 §15）：A 成長與壽命、B 年齡階段照顧規則、C 台灣醫療價格、D 好發疾病、E 寵物保險，適合剛學程式的組員在第 1～2 週並行；F 收容 API 分析由有程式背景的組員負責。分工人選待定。</p>
+      <p class="small muted">第 5 週檢查進度，落後時依序縮減：① 延伸 A 照片辨識 ② 延伸 A 移到第二階段（保留延伸 B）③ 地圖卡片改為文字清單 ④「如果……就可以」改為只顯示不符合條件 ⑤ 問答限定熱門品種。所有 P0（含一生拉桿）不縮減。</p>
     </div>
   </section>
 
@@ -307,9 +311,13 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
       <div class="tablewrap"><table>
         <tr><th>功能</th><th>負責</th><th>內容</th><th>測試版位置</th></tr>
         <tr><td>寵物配對 AI</td><td>找出適合的</td><td>單一輸入框：推薦與追加條件、AI 建議追問、「如果……就可以」、問答（RAG）、環境評估地圖卡片</td><td>① 寵物配對 AI</td></tr>
-        <tr><td>品種詳細頁</td><td>深入了解</td><td>品種介紹、特徵評分、照顧指南、費用、購買與領養比較</td><td>② 品種詳細頁</td></tr>
+        <tr><td>品種詳細頁</td><td>深入了解</td><td>品種介紹、特徵評分、照顧指南、費用、購買與領養比較、<b>一生拉桿</b>（各年齡階段的體型、特徵、花費、疾病提醒與一生總花費）</td><td>② 品種詳細頁</td></tr>
         <tr><td>AI 品質評估</td><td>證明可靠</td><td>自動化測試、與通用 AI 的對照實驗</td><td>③ AI 品質評估</td></tr>
+        <tr><td>延伸 A：領養通知（P1）</td><td>陪伴等待期</td><td>符合條件的收容動物上架時寄 Email 摘要；進階版以 AI 照片辨識外觀（P2）</td><td>尚未做</td></tr>
+        <tr><td>延伸 B：考慮清單（P1）</td><td>和家人一起決定</td><td>候選品種並排比較，可分享連結或下載 PDF</td><td>尚未做</td></tr>
+        <tr><td>符合你條件的收容動物（P1）</td><td>讓適合的人看見收容動物</td><td>依功能 1 的條件列出可能合適的收容動物（含混種），只呈現資訊、不寫勸說文字</td><td>尚未做</td></tr>
       </table></div>
+      <p class="small muted">P0（不縮減）：推薦與條件理解、附來源問答與護欄、品種詳細頁與購買領養比較、一生拉桿、AI 品質評估與對照實驗。詳見 <code>寵物配對_PRD.md</code> v0.3 與 <code>PRD_quick.md</code>。</p>
       <p class="small muted">AI 負責：判斷輸入類型、句子轉標籤、挑選追問、產生「如果……就可以」說明、依資料庫回答問題（RAG）、辨識地點。AI 不負責產生品種資料，資料一律來自自建資料庫；AI 失靈時以關鍵字比對與範本回答備案。</p>
     </div>
 
@@ -326,6 +334,11 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
         <tr><td>登記費用</td><td>農業部</td><td>犬、貓均須登記；晶片 300 元；登記費已絕育 500、未絕育 1,000 元</td></tr>
         <tr><td>合法業者名冊</td><td>臺北市特定寵物業分區名冊（政府開放資料）</td><td>購買管道連結</td></tr>
         <tr><td>地圖與周邊設施</td><td>Google Geocoding、OpenStreetMap、臺北市動物醫院開放資料、臺北市狗運動公園</td><td>詳見 ① 地圖卡片與規則表</td></tr>
+        <tr><td>官方認養頁面</td><td>農業部寵物登記管理資訊網（pet.gov.tw）</td><td>只作外部連結，不爬取（robots.txt 禁止自動抓取）</td></tr>
+        <tr><td>成長與照顧規則（一生拉桿）</td><td>品種標準（AKC 等）、農業部飼養照護指南、獸醫資料</td><td>待蒐集，需專家審核</td></tr>
+        <tr><td>醫療價格（一生拉桿）</td><td>動物醫院公開價目、農業部、保險文件、詢價</td><td>待蒐集</td></tr>
+        <tr><td>好發疾病（一生拉桿）</td><td>獸醫文獻、國外保險理賠報告</td><td>須註明非台灣資料</td></tr>
+        <tr><td>寵物保險（一生拉桿）</td><td>各公司官網、保發中心保險商品查詢資料庫（insprod.tii.org.tw）</td><td>標示查核日期，以各公司公告為準</td></tr>
       </table></div>
     </div>
 
@@ -345,9 +358,9 @@ code{background:var(--chip);padding:1px 5px;border-radius:4px;font-size:12px}
       <div class="two">
         <div><h3>第一階段（本專題）</h3>
           <ul class="pc small">
-            <li>狗約 15–20 種、貓約 10 種（台灣常見品種）</li>
-            <li>3 項功能（寵物配對 AI、品種詳細頁、AI 品質評估）、收容所 API 串接</li>
-            <li>先不做：會員系統、收藏、留言評價</li>
+            <li>狗約 15–20 種、貓約 10 種（台灣常見品種；完整名單待定）</li>
+            <li>3 項功能（寵物配對 AI、品種詳細頁含一生拉桿、AI 品質評估）、延伸 A 領養通知、延伸 B 考慮清單、收容所 API 串接</li>
+            <li>先不做：會員系統、留言、論壇社群</li>
           </ul></div>
         <div><h3>第二階段（屬於「養了之後」）</h3>
           <ul class="pc small">
@@ -804,6 +817,9 @@ function renderBreed(){
       <tr><th>一次性</th><td>${c.reg}</td></tr>
       <tr><th>每年開銷</th><td>約 ${money(annual)}<div class="small muted">農業部平均 ${sp} ${c.annual.toLocaleString()} 元／年 × 體型係數 ${SIZE_MULT[b.size]}（係數為示意，待討論）</div></td></tr>
     </table></div>
+    <h3>⏳ 一生拉桿：牠會長多大、一生要花多少</h3>
+    <p class="small muted" style="margin:-2px 0 6px">拉到哪個年紀，就顯示那時的體型、特徵、花費與疾病提醒，最後看一生總花費（PRD F2-5，P0）。</p>
+    <div id="life"></div>
     <h3>購買 vs. 領養</h3><p class="small muted" style="margin:-2px 0 6px">兩種方式並列比較，由你自行決定。</p>
     <div class="tablewrap"><table>
       <tr><th>比較項目</th><th>購買幼${sp}</th><th>領養</th></tr>
@@ -821,6 +837,121 @@ function renderBreed(){
     <h3>問問寵物配對 AI</h3>
     <div class="chips">${[`${b.name}適合住公寓嗎？`,`${b.name}一年大概花多少錢？`,`${b.name}常見疾病？`].map(q=>`<button class="chip plain" data-askq="${esc(q)}">${esc(q)}</button>`).join('')}</div>
     <p class="small muted" style="margin-top:14px">本站不參與交易；內容僅供參考，不取代獸醫或收容所評估。品種資料來源：國際犬／貓種協會公開資料（改寫）、農業部飼養照護指南（測試版尚未查證）。</p>`;
+  renderLife();
+}
+
+/* ===================== 一生拉桿（PRD F2-5；數字皆為示意） ===================== */
+// 肩高（公分，成年，示意）
+const HEIGHT_CM={poodle:28,maltese:23,shihtzu:25,pomeranian:20,chihuahua:18,dachshund:22,frenchie:30,pug:30,shiba:38,corgi:28,border:50,golden:58,labrador:57,husky:55,mixdog:48,mixcat:25,bsh:30,ash:28,ragdoll:30,siamese:27,munchkin:18,persian:27};
+const SHORT_LEG=['corgi','dachshund','munchkin'], LONG_FUR=['maltese','shihtzu','pomeranian','ragdoll','persian','golden','husky'];
+const ERECT_EAR=['shiba','corgi','husky','frenchie','chihuahua','pomeranian'];
+const FUR_COLOR={poodle:'#c9a27a',maltese:'#f4f1ea',shihtzu:'#d8c2a0',pomeranian:'#e39a4c',chihuahua:'#d9b07a',dachshund:'#8a4f2a',frenchie:'#9a8f86',pug:'#d8c29a',shiba:'#d98a3e',corgi:'#d98a3e',border:'#3a3a3a',golden:'#d9a54c',labrador:'#e3c78f',husky:'#8f949a',mixdog:'#b0814f',mixcat:'#9a8a78',bsh:'#8f97a3',ash:'#b5b5b5',ragdoll:'#efe6d8',siamese:'#e8dcc8',munchkin:'#c9a27a',persian:'#f0ece4'};
+// 年齡階段 × 通用規則（討論紀錄 §10、§11；數字為示意，待獸醫或官方來源）
+function lifeStages(b){
+  const dog=b.species==='dog', senior=dog?(b.size==='大'?6:8):10;
+  const [lo,hi]=(b.life.match(/\d+/g)||[12,15]).map(Number);
+  return {lo,hi,stages:[
+    {k:'young',name:dog?'幼犬':'幼貓',from:0,to:1,wt:.35,ht:.55,head:1.35,cost:1.6,act:+1,train:5,alone:1,
+      note:dog?'不能獨處太久，需定時餵食與上廁所訓練；換牙期會咬東西':'需定時餵食與社會化；換牙期會咬東西',
+      dz:'疫苗完成前注意傳染病（示意）'},
+    {k:'teen',name:'青少年',from:1,to:2,wt:.85,ht:.92,head:1.1,cost:1.0,act:+1,train:4,alone:2,
+      note:'精力最旺盛，是訓練與社會化的關鍵期',dz:'—（示意）'},
+    {k:'adult',name:dog?'成犬':'成貓',from:2,to:senior,wt:1,ht:1,head:1,cost:1.0,act:0,train:2,alone:3,
+      note:'體型與個性大致穩定，較能獨處',dz:b.care.disease},
+    {k:'senior',name:dog?'老犬':'老貓',from:senior,to:hi,wt:1,ht:1,head:1,cost:1.5,act:-2,train:2,alone:3,
+      note:'活動量下降，健康檢查需求增加',dz:b.care.disease+'；老年常見關節、牙齒、腎臟問題（示意，待獸醫審核）'},
+  ]};
+}
+// 保險（討論紀錄 §12；查核日期 2026/11/22，以各公司公告為準）
+const INSURERS=[{n:'國泰產險',age:6.5,ageTxt:'未滿 6 歲 6 個月'},{n:'富邦產險',age:8,ageTxt:'未滿 8 歲'},{n:'旺旺友聯產險',age:8.5,ageTxt:'滿 2 個月至 8 歲 6 個月以下'}];
+const INS_PREMIUM=[2900,6700];
+const ONE_TIME={dog:[300+500+3000,300+1000+8000],cat:[300+500+2000,300+1000+5000]}; // 晶片＋登記＋絕育（絕育價格示意，待查）
+let lifeStage=0, lifeReserve=false, lifeIns=false;
+
+function petSvg(b,s){
+  const H=200, groundY=185, pxPerCm=H/210; // 以 210 cm 為畫面高度
+  const shoulder=(HEIGHT_CM[b.id]||30)*s.ht*pxPerCm;
+  const leg=shoulder*(SHORT_LEG.includes(b.id)?.28:.55), bodyH=shoulder-leg, bodyW=bodyH*(SHORT_LEG.includes(b.id)?2.6:1.9);
+  const x0=250, bodyY=groundY-leg-bodyH/2, col=FUR_COLOR[b.id]||'#b0814f';
+  const headR=bodyH*.55*s.head, hx=x0+bodyW/2+headR*.3, hy=bodyY-bodyH*.45;
+  const fur=LONG_FUR.includes(b.id)?`<ellipse cx="${x0}" cy="${bodyY+bodyH*.35}" rx="${bodyW/2}" ry="${bodyH*.35}" fill="${col}" opacity=".7"/>`:'';
+  const ear=b.species==='cat'||ERECT_EAR.includes(b.id)
+    ?`<polygon points="${hx-headR*.7},${hy-headR*.5} ${hx-headR*.45},${hy-headR*1.45} ${hx-headR*.05},${hy-headR*.8}" fill="${col}"/><polygon points="${hx+headR*.05},${hy-headR*.8} ${hx+headR*.45},${hy-headR*1.45} ${hx+headR*.7},${hy-headR*.5}" fill="${col}"/>`
+    :`<ellipse cx="${hx-headR*.8}" cy="${hy+headR*.2}" rx="${headR*.3}" ry="${headR*.65}" fill="${col}" stroke="#00000033"/>`;
+  const legs=[-.35,-.15,.2,.38].map(f=>`<rect x="${x0+bodyW*f-3}" y="${groundY-leg-2}" width="${Math.max(4,bodyW*.09)}" height="${leg+2}" rx="2" fill="${col}"/>`).join('');
+  const tail=`<path d="M${x0-bodyW/2} ${bodyY} q ${-bodyH*.5} ${-bodyH*.6} ${-bodyH*.2} ${-bodyH}" stroke="${col}" stroke-width="${Math.max(3,bodyH*.15)}" fill="none" stroke-linecap="round"/>`;
+  const person=`<g fill="var(--line)"><circle cx="70" cy="${groundY-170*pxPerCm+11}" r="11"/><rect x="58" y="${groundY-170*pxPerCm+22}" width="24" height="${170*pxPerCm-22}" rx="8"/></g><text x="70" y="${groundY+13}" text-anchor="middle" font-size="10" fill="var(--muted)">人 170 cm</text>`;
+  const sofa=`<g fill="var(--line)"><rect x="380" y="${groundY-85*pxPerCm}" width="110" height="${85*pxPerCm}" rx="8"/></g><text x="435" y="${groundY+13}" text-anchor="middle" font-size="10" fill="var(--muted)">沙發 85 cm</text>`;
+  const door=`<rect x="520" y="${groundY-200*pxPerCm}" width="60" height="${200*pxPerCm}" fill="none" stroke="var(--line)" stroke-width="3"/><text x="550" y="${groundY+13}" text-anchor="middle" font-size="10" fill="var(--muted)">門 200 cm</text>`;
+  return `<svg viewBox="0 0 600 200" style="width:100%;max-width:600px;display:block;margin:auto" role="img" aria-label="${esc(b.name)}${s.name}體型比例示意">
+    <line x1="10" y1="${groundY}" x2="590" y2="${groundY}" stroke="var(--line)" stroke-width="2"/>
+    ${person}${sofa}${door}
+    <g>${tail}${legs}<ellipse cx="${x0}" cy="${bodyY}" rx="${bodyW/2}" ry="${bodyH/2}" fill="${col}"/>${fur}${ear}<circle cx="${hx}" cy="${hy}" r="${headR}" fill="${col}"/>
+      <circle cx="${hx+headR*.35}" cy="${hy-headR*.1}" r="${Math.max(1.5,headR*.1)}" fill="#2b2622"/></g>
+  </svg>`;
+}
+function lifeCost(b,L){
+  const base=COSTS[b.species].annual*SIZE_MULT[b.size], reserve=b.disease*1000;
+  const yearCost=(age,prem)=>{
+    const s=L.stages.find(x=>age>=x.from&&age<x.to)||L.stages[3];
+    return base*s.cost+(lifeReserve?reserve*(s.k==='senior'?2:1):0)+(lifeIns?prem:0);
+  };
+  const curve=(years,oneTime,prem)=>{let acc=oneTime,pts=[[0,acc]];for(let y=0;y<years;y++){acc+=yearCost(y,prem);pts.push([y+1,acc])}return pts};
+  const ot=ONE_TIME[b.species];
+  const lo=curve(L.lo,ot[0],INS_PREMIUM[0]), hi=curve(L.hi,ot[1],INS_PREMIUM[1]);
+  return {lo,hi,total:[lo[lo.length-1][1],hi[hi.length-1][1]],base,reserve};
+}
+function curveSvg(lo,hi,maxAge,stage){
+  const W=600,H=170,pl=56,pb=24,maxV=hi[hi.length-1][1]*1.05;
+  const X=a=>pl+(W-pl-10)*a/maxAge, Y=v=>H-pb-(H-pb-10)*v/maxV;
+  const band=lo.map(p=>`${X(p[0])},${Y(p[1])}`).join(' ')+' '+hi.slice().reverse().map(p=>`${X(p[0])},${Y(p[1])}`).join(' ');
+  const ticks=[0,.5,1].map(f=>`<text x="${pl-6}" y="${Y(maxV*f)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${Math.round(maxV*f/10000)} 萬</text>`).join('');
+  const ages=[...Array(maxAge+1).keys()].filter(a=>a%2===0).map(a=>`<text x="${X(a)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--muted)">${a}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:600px;display:block;margin:auto" role="img" aria-label="一生累積花費曲線">
+    <rect x="${X(stage.from)}" y="10" width="${X(Math.min(stage.to,maxAge))-X(stage.from)}" height="${H-pb-10}" fill="var(--accent-soft)"/>
+    <polygon points="${band}" fill="var(--accent)" opacity=".35"/>
+    <polyline points="${hi.map(p=>`${X(p[0])},${Y(p[1])}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    <line x1="${pl}" y1="${H-pb}" x2="${W-10}" y2="${H-pb}" stroke="var(--line)"/>${ticks}${ages}
+    <text x="${W-10}" y="${H-8}" text-anchor="end" font-size="10" fill="var(--muted)">歲</text>
+  </svg>`;
+}
+function renderLife(){
+  const box=$('#life'); if(!box) return;
+  const b=BREEDS.find(x=>x.id===curBreed), L=lifeStages(b), s=L.stages[lifeStage];
+  const wts=(b.weight.match(/[\d.]+/g)||[]).slice(0,2).map(Number);
+  const wTxt=wts.length===2?`約 ${(wts[0]*s.wt).toFixed(1)}–${(wts[1]*s.wt).toFixed(1)} 公斤`:'—';
+  const htTxt=`約 ${Math.round((HEIGHT_CM[b.id]||30)*s.ht)} 公分`;
+  const lv=v=>Math.max(1,Math.min(5,v));
+  const C=lifeCost(b,L), yr=C.base*s.cost+(lifeReserve?C.reserve*(s.k==='senior'?2:1):0);
+  const yrTxt=lifeIns?`${money(yr+INS_PREMIUM[0])} – ${money(yr+INS_PREMIUM[1])}（含保險）`:money(yr);
+  const insNote=INSURERS.map(i=>`${i.n}：首次投保 ${i.ageTxt}${i.age!==null&&s.from>=i.age?'（<b>此階段已超過，可能無法新投保</b>）':''}`).join('；');
+  box.innerHTML=`
+    <input type="range" id="lifeRange" min="0" max="3" step="1" value="${lifeStage}" style="width:100%;accent-color:var(--accent)" aria-label="年齡階段">
+    <div class="row" style="justify-content:space-between;font-size:13px">${L.stages.map((x,i)=>`<span style="${i===lifeStage?'font-weight:700;color:var(--accent)':'color:var(--muted)'}">${x.name}<br><span class="small">${x.from}–${x.to} 歲</span></span>`).join('')}</div>
+    ${petSvg(b,s)}
+    <div class="two">
+      <div>
+        <div class="facts"><span><b>體重</b>${wTxt}</span><span><b>肩高</b>${htTxt}</span></div>
+        ${bar('活動量',lv(b.exercise+s.act))}${bar('訓練需求',s.train)}${bar('獨處能力',lv(s.alone+(b.clingy<=2?1:0)-(b.clingy>=5?1:0)))}
+        <p class="small" style="margin:6px 0">${esc(s.note)}</p>
+      </div>
+      <div>
+        <div class="facts"><span><b>此階段每年花費</b>約 ${yrTxt}</span></div>
+        <div class="small"><b>好發疾病提醒：</b>${esc(s.dz)}<div class="muted">疾病資料多來自國外保險資料，與台灣可能有差異；風險高不代表一定發生。</div></div>
+        <div class="small" style="margin-top:6px"><b>保險提醒：</b>${insNote}</div>
+      </div>
+    </div>
+    <h3 style="margin-top:14px">一生花費（區間）</h3>
+    <div class="row small">
+      <label><input type="checkbox" id="lifeReserve" ${lifeReserve?'checked':''}> 計入好發疾病預留金</label>
+      <label><input type="checkbox" id="lifeIns" ${lifeIns?'checked':''}> 計入寵物保險（選填）</label>
+    </div>
+    ${curveSvg(C.lo,C.hi,L.hi,s)}
+    <div class="notice info"><b>一生總花費約 ${money(C.total[0])} – ${money(C.total[1])}</b>（壽命 ${L.lo}–${L.hi} 年）
+      <div class="small muted">＝一次性（晶片、登記、絕育）＋各階段每年花費 × 階段年數${lifeReserve?'＋好發疾病預留金':''}${lifeIns?`＋保險年保費 ${money(INS_PREMIUM[0])}–${money(INS_PREMIUM[1])}`:''}。不預測個別動物的花費。</div>
+      ${lifeIns?'<div class="small muted">保險只補一部分：年度醫療理賠上限約 2.5 萬–13 萬元、有自負額、非保證續保，仍建議另備預留金。只列有公開投保方案的國泰產險、富邦產險、旺旺友聯產險，不排名、不推薦；查核日期 2026/11/22，以各公司公告為準。</div>':''}
+    </div>
+    <p class="small muted" style="margin:0">⚠ 示意：年齡階段、體重、肩高、絕育價格、各階段花費倍率與疾病預留金皆為示意，待依討論紀錄 §15（A～E）蒐集資料並經獸醫或老師審核。</p>`;
 }
 function showTab(name){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
@@ -1034,12 +1165,23 @@ function runEval(){
 }
 
 /* ===================== 待決事項 ===================== */
+// [狀態 1=已決定 0=待決, 事項, 擋住的 P0（空白＝不擋）]
 const TODO=[
-  [1,'功能整併：寵物配對 AI／品種詳細頁／AI 品質評估'],[1,'地圖範圍：台北市；資料來源：混合方案'],[1,'購買管道：辨識提醒＋政府合法業者名冊'],
-  [0,'AI 服務（模型）與預算（可詢問學校是否提供帳號或額度）'],[0,'前端、後端框架與資料庫'],[0,'問答的檢索方式（向量資料庫或關鍵字索引）'],
-  [0,'對照實驗要比較的通用 AI 與版本'],[0,'各項 AI 指標的目標值'],[0,'環境評估規則定案、「大型公園」門檻（待專家審核）'],
-  [0,'Google 帳號綁卡人選與用量上限設定'],[0,'各標籤的判斷標準與參考來源'],[0,'貓的買賣是否需要許可證（向動保處確認）'],
-  [0,'內容審核人選（獸醫／老師）'],[0,'444 人台灣研究的論文網址'],
+  [1,'功能整併：寵物配對 AI／品種詳細頁／AI 品質評估',''],[1,'地圖範圍：台北市；資料來源：混合方案',''],[1,'購買管道：辨識提醒＋政府合法業者名冊',''],
+  [1,'品種範圍以 README 為準：狗約 15–20 種、貓約 10 種（11/22）',''],[1,'一生拉桿列為 P0，涵蓋所有收錄品種；2D 參數化 SVG（11/22）',''],
+  [1,'年齡階段：幼犬、青少年、成犬、老犬（11/22）',''],[1,'「符合你條件的收容動物」列為 P1（11/22）',''],
+  [0,'JTBD 與 value-hypothesis（讓每個 P0 對應到最冒險的假設）','FR-1～FR-5'],
+  [0,'坪數、可獨處時數、每月花費等數字門檻（待專家審核）','FR-1'],
+  [0,'以真實 API 資料驗證 animal_status 的實際值','FR-3'],
+  [0,'一生拉桿資料：各階段體重肩高、台灣醫療價格、好發疾病（討論紀錄 §15 A～D）；旺旺友聯保險的理賠上限與保費（首次投保年齡已補，11/22）','FR-4'],
+  [0,'對照實驗要比較的通用 AI 與版本','FR-5'],
+  [0,'內容審核人選（獸醫／老師）','FR-1、FR-4'],
+  [0,'第一階段的完整品種名單',''],[0,'一生拉桿排入哪幾週、資料蒐集分工人選',''],[0,'保險資料的更新頻率與負責人',''],
+  [0,'AI 服務（模型）與預算',''],[0,'前端、後端框架與資料庫',''],[0,'問答的檢索方式（向量資料庫或關鍵字索引）',''],
+  [0,'G1 目標值、反指標（Counter-metric）、p95 回應時間目標',''],[0,'環境評估規則定案、「大型公園」門檻',''],
+  [0,'Google 帳號綁卡人選與用量上限',''],[0,'各標籤的判斷標準與參考來源',''],[0,'貓的買賣是否需要許可證（向動保處確認）',''],
+  [0,'Email 寄送服務、排程環境；照片辨識模型與先支援的品種',''],[0,'「幼犬、成犬納入考量」的具體寫法（討論紀錄 §10）',''],
+  [0,'444 人台灣研究的論文網址',''],
 ];
 
 /* ===================== 事件 ===================== */
@@ -1070,13 +1212,17 @@ document.addEventListener('click',e=>{
   else if(el.id==='unban'){banned=false;render()}
   else if(el.classList.contains('breed')){openBreed(el.dataset.id)}
 });
-document.addEventListener('change',e=>{if(e.target.dataset.f){envDraft[e.target.dataset.f]=e.target.checked?1:0;envLabel='自訂';render()}});
+document.addEventListener('input',e=>{if(e.target.id==='lifeRange'){lifeStage=+e.target.value;renderLife();$('#lifeRange').focus()}});
+document.addEventListener('change',e=>{
+  if(e.target.id==='lifeReserve'){lifeReserve=e.target.checked;renderLife();return}
+  if(e.target.id==='lifeIns'){lifeIns=e.target.checked;renderLife();return}
+  if(e.target.dataset.f){envDraft[e.target.dataset.f]=e.target.checked?1:0;envLabel='自訂';render()}});
 renderBreed();
 $('#qbtn').onclick=submit; $('#q').onkeydown=e=>{if(e.key==='Enter')submit()};
 $('#clear').onclick=()=>{conds=[];banned=false;allergyLevel=null;asked=new Set();lastAnswer=null;home=null;env=null;$('#parseInfo').textContent='';$('#outsideNote')&&$('#outsideNote').remove();render()};
 
 $('#evalRun').onclick=runEval;
-$('#todoTable').innerHTML='<tr><th>狀態</th><th>事項</th></tr>'+TODO.map(([d,t])=>`<tr><td>${d?'<span class="pass">✔ 已決定</span>':'<span class="muted">☐ 待決</span>'}</td><td>${t}</td></tr>`).join('');
+$('#todoTable').innerHTML='<tr><th>狀態</th><th>事項</th><th>擋住 P0</th></tr>'+TODO.map(([d,t,p])=>`<tr><td>${d?'<span class="pass">✔ 已決定</span>':'<span class="muted">☐ 待決</span>'}</td><td>${t}</td><td>${p?`<span class="tag b">${p}</span>`:'<span class="muted small">—</span>'}</td></tr>`).join('');
 
 initMap(); renderEnvInputs(); render();
 </script>
